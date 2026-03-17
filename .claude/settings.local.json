@@ -6,7 +6,32 @@
       "Bash(xcodebuild -scheme WeChatSwift -destination 'platform=iOS Simulator,OS=latest,name=iPhone 16' build)",
       "Bash(xcrun simctl:*)",
       "Bash(xcodebuild -scheme WeChatSwift -destination 'platform=iOS Simulator,id=8A4ECA4A-7B01-4195-AFC5-18D5BC5F7C6D' build)",
-      "Bash(xcodebuild -scheme WeChatSwift -destination 'platform=iOS Simulator,id=8A4ECA4A-7B01-4195-AFC5-18D5BC5F7C6D' clean build)"
+      "Bash(xcodebuild -scheme WeChatSwift -destination 'platform=iOS Simulator,id=8A4ECA4A-7B01-4195-AFC5-18D5BC5F7C6D' clean build)",
+      "Bash(xcodebuild -list -json)",
+      "Bash(find /Users/a1021500055/Study/HelloRN/WeChatSwift -name \"*.swift\" -type f -exec grep -l \"class.*: UIViewController\" {})",
+      "Bash(sed -i '' '/0474228A1FAFB37BEE52A42F.*RNBaseViewController.swift in Sources/d' /Users/a1021500055/Study/HelloRN/WeChatSwift/WeChatSwift.xcodeproj/project.pbxproj)",
+      "Bash(sed -i '' '/AB7F1CECABB43C9A4E1FCACF.*RNBaseViewController.swift/d' /Users/a1021500055/Study/HelloRN/WeChatSwift/WeChatSwift.xcodeproj/project.pbxproj)",
+      "Bash(pod install:*)",
+      "Bash(for file:*)",
+      "Bash(do)",
+      "Bash(__NEW_LINE_80855d492d94541d__ sed:*)",
+      "Bash(__NEW_LINE_80855d492d94541d__ done:*)",
+      "Bash(xcodebuild -scheme DiscoverModule -destination 'platform=iOS Simulator,id=8A4ECA4A-7B01-4195-AFC5-18D5BC5F7C6D' build)",
+      "Bash(xcodebuild -scheme ExtensionKit -destination 'generic/platform=iOS Simulator' build)",
+      "Bash(grep:*)",
+      "Bash(/tmp/appdelegate_example.swift:*)",
+      "Bash(sed -i '' '/BE18C07368E1392A024AD515.*RouterImpl.swift in Sources/d' /Users/a1021500055/Study/HelloRN/WeChatSwift/WeChatSwift.xcodeproj/project.pbxproj)",
+      "Bash(sed -i '' '/E9BABEA1024F7BB6DA1E32E7.*RouterImpl.swift/d' /Users/a1021500055/Study/HelloRN/WeChatSwift/WeChatSwift.xcodeproj/project.pbxproj)",
+      "Bash(xcodebuild -workspace WeChatSwift.xcworkspace -scheme WeChatSwift -destination 'platform=iOS Simulator,id=8A4ECA4A-7B01-4195-AFC5-18D5BC5F7C6D' build)",
+      "Bash(find WeChatSwift/Screens -type f -name *.swift)",
+      "Bash(find Modules/Business -type f -name *.swift)",
+      "Bash(xcodebuild -project WeChatSwift.xcodeproj -scheme WeChatSwift -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' clean build)",
+      "Bash(git config:*)",
+      "Bash(git submodule:*)",
+      "Bash(git -C Foundation/RouterKit add Core/Router.swift)",
+      "Bash(git -C Foundation/RouterKit commit -m \"refactor: simplify Router implementation\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

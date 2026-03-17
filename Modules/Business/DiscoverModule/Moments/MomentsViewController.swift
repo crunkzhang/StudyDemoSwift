@@ -1,7 +1,8 @@
 import UIKit
+import WeChatUI
 import SnapKit
 
-public class MomentsViewController: UIViewController {
+public final class MomentsViewController: BaseViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white

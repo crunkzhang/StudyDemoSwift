@@ -1,7 +1,8 @@
 import UIKit
+import WeChatUI
 import SnapKit
 
-public class ShoppingViewController: UIViewController {
+public final class ShoppingViewController: BaseViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white

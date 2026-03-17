@@ -1,7 +1,8 @@
 import UIKit
+import WeChatUI
 import SnapKit
 
-public class GameViewController: UIViewController {
+public final class GameViewController: BaseViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white

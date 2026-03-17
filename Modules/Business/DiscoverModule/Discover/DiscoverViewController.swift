@@ -1,10 +1,11 @@
 import UIKit
+import WeChatUI
 import SnapKit
 import ExtensionKit
 import RouterKit
 import WeChatRouter
 
-public class DiscoverViewController: UIViewController {
+public class DiscoverViewController: BaseViewController {
     private struct DiscoverItem {
         let icon: String
         let iconColor: UIColor

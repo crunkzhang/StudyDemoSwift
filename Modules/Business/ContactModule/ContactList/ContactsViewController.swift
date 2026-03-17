@@ -1,8 +1,9 @@
 import UIKit
+import WeChatUI
 import SnapKit
 import ExtensionKit
 
-public class ContactsViewController: UIViewController {
+public class ContactsViewController: BaseViewController {
     private var sections: [String] = []
     private var grouped: [String: [Contact]] = [:]
 

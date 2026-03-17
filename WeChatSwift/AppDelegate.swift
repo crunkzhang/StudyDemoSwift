@@ -24,9 +24,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         reactNativeFactory = factory
 
         // 注册所有业务模块的路由
-        ChatViewController.registerRoutes()
-        ContactModuleEntry.registerRoutes()
-        DiscoverViewController.registerRoutes()
+        ChatModule.registerRoutes()
+        ContactModule.registerRoutes()
+        DiscoverModule.registerRoutes()
         MeModule.registerRoutes()
 
         return true

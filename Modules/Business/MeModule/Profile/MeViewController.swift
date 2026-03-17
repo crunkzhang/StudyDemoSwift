@@ -1,8 +1,9 @@
 import UIKit
+import WeChatUI
 import SnapKit
 import ExtensionKit
 
-public class MeViewController: UIViewController {
+public class MeViewController: BaseViewController {
     private struct MeItem {
         let icon: String
         let iconColor: UIColor

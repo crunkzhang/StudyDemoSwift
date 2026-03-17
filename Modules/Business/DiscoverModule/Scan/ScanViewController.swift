@@ -1,7 +1,8 @@
 import UIKit
+import WeChatUI
 import SnapKit
 
-public class ScanViewController: UIViewController {
+public final class ScanViewController: BaseViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white

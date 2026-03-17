@@ -1,7 +1,8 @@
 import UIKit
+import WeChatUI
 import SnapKit
 
-public class SearchViewController: UIViewController {
+public final class SearchViewController: BaseViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white

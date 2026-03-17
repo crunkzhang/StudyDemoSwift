@@ -65,12 +65,13 @@ target 'WeChatRouter' do
   pod 'RouterKit', :path => './Foundation/RouterKit'
 end
 
-target 'WeChatBridge' do
+target 'WeChatRNKit' do
   rn_path = '../WeChatRN/node_modules/react-native'
   use_react_native!(
     :path => rn_path,
     :app_path => rn_project
   )
+  shared_pods
 end
 
 # 业务模块层

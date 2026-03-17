@@ -1,9 +1,10 @@
 import UIKit
+import WeChatUI
 import SnapKit
 import RouterKit
 import WeChatRouter
 
-public class ChatViewController: UIViewController {
+public class ChatViewController: BaseViewController {
     private var conversations: [ChatConversation] = []
 
     private lazy var tableView: UITableView = {

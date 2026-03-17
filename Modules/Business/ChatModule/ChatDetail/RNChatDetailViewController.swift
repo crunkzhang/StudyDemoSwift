@@ -1,8 +1,9 @@
 import UIKit
+import WeChatUI
 import React
-import WeChatBridge
+import WeChatRNKit
 
-public class RNChatDetailViewController: UIViewController {
+public class RNChatDetailViewController: BaseViewController {
     private let chatId: String
     private let contactName: String
 

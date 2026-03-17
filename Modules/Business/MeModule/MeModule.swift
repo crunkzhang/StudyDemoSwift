@@ -1,7 +1,7 @@
 import UIKit
 import RouterKit
 
-extension MeModuleEntry: Routable {
+extension MeModule: ModuleRoutable {
     public static func registerRoutes() {
         // 个人中心相关路由注册
         // 未来可以添加：
@@ -11,7 +11,7 @@ extension MeModuleEntry: Routable {
     }
 }
 
-public class MeModuleEntry {
-    public static let shared = MeModuleEntry()
+public class MeModule {
+    public static let shared = MeModule()
     private init() {}
 }

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodebuild -workspace WeChatSwift.xcworkspace -scheme WeChatSwift -destination 'platform=iOS Simulator,name=iPhone 16' build)",
+      "Bash(xcodebuild -list)",
+      "Bash(xcodebuild -scheme WeChatSwift -destination 'platform=iOS Simulator,OS=latest,name=iPhone 16' build)",
+      "Bash(xcrun simctl:*)",
+      "Bash(xcodebuild -scheme WeChatSwift -destination 'platform=iOS Simulator,id=8A4ECA4A-7B01-4195-AFC5-18D5BC5F7C6D' build)",
+      "Bash(xcodebuild -scheme WeChatSwift -destination 'platform=iOS Simulator,id=8A4ECA4A-7B01-4195-AFC5-18D5BC5F7C6D' clean build)"
+    ]
+  }
+}

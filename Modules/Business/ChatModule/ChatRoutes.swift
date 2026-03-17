@@ -1,7 +1,7 @@
 import UIKit
 import RouterKit
 
-extension ChatViewController: Routable {
+extension ChatViewController: ModuleRoutable {
     public static func registerRoutes() {
         Router.shared.register("chat/detail") { params in
             guard let chatId = params["chatId"],

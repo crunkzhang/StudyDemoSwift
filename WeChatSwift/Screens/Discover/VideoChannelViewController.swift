@@ -1,4 +1,5 @@
 import UIKit
+import SnapKit
 
 class VideoChannelViewController: UIViewController {
     override func viewDidLoad() {
@@ -12,10 +13,9 @@ class VideoChannelViewController: UIViewController {
         label.textColor = .secondaryLabel
         label.textAlignment = .center
         view.addSubview(label)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-        ])
+        label.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.centerY.equalTo(view.safeAreaLayoutGuide)
+        }
     }
 }

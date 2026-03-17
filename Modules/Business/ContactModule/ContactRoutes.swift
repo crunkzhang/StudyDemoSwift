@@ -1,7 +1,7 @@
 import UIKit
 import RouterKit
 
-extension ContactModuleEntry: Routable {
+extension ContactModuleEntry: ModuleRoutable {
     public static func registerRoutes() {
         // 通讯录相关路由注册
         // 未来可以添加：

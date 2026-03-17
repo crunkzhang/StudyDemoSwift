@@ -1,7 +1,7 @@
 import UIKit
 import RouterKit
 
-extension DiscoverViewController: Routable {
+extension DiscoverViewController: ModuleRoutable {
     public static func registerRoutes() {
         Router.shared.register("discover/moments") { _ in MomentsViewController() }
         Router.shared.register("discover/videoChannel") { _ in VideoChannelViewController() }

@@ -27,7 +27,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         ChatViewController.registerRoutes()
         ContactModuleEntry.registerRoutes()
         DiscoverViewController.registerRoutes()
-        MeModuleEntry.registerRoutes()
+        MeModule.registerRoutes()
 
         return true
     }

@@ -1,0 +1,180 @@
+name: WeChatSwift
+options:
+  bundleIdPrefix: com.study
+  deploymentTarget:
+    iOS: "15.1"
+  developmentLanguage: zh-Hans
+
+# ========== 通用基础组件层（可跨项目复用）==========
+targets:
+  RouterKit:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/Foundation/RouterKit
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.foundation.RouterKit
+      GENERATE_INFOPLIST_FILE: YES
+
+  ExtensionKit:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/Foundation/ExtensionKit
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.foundation.ExtensionKit
+      GENERATE_INFOPLIST_FILE: YES
+
+  # ========== 项目基础组件层（微信特有）==========
+  WeChatUI:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/WeChatKit/WeChatUI
+    dependencies:
+      - target: ExtensionKit
+      - framework: SnapKit
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatUI
+      GENERATE_INFOPLIST_FILE: YES
+
+  WeChatRouter:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/WeChatKit/WeChatRouter
+    dependencies:
+      - target: RouterKit
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRouter
+      GENERATE_INFOPLIST_FILE: YES
+
+  WeChatBridge:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/WeChatKit/WeChatBridge
+    dependencies:
+      - framework: React
+      - framework: React_RCTAppDelegate
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatBridge
+      GENERATE_INFOPLIST_FILE: YES
+
+  # ========== 业务模块层 ==========
+  ChatModule:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/Modules/ChatModule
+    dependencies:
+      - target: WeChatUI
+      - target: WeChatRouter
+      - target: WeChatBridge
+      - target: RouterKit
+      - target: ExtensionKit
+      - framework: React
+      - framework: React_RCTAppDelegate
+      - framework: SnapKit
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.ChatModule
+      GENERATE_INFOPLIST_FILE: YES
+
+  ContactModule:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/Modules/ContactModule
+    dependencies:
+      - target: WeChatUI
+      - target: WeChatRouter
+      - target: RouterKit
+      - target: ExtensionKit
+      - framework: SnapKit
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.ContactModule
+      GENERATE_INFOPLIST_FILE: YES
+
+  DiscoverModule:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/Modules/DiscoverModule
+    dependencies:
+      - target: WeChatUI
+      - target: WeChatRouter
+      - target: RouterKit
+      - target: ExtensionKit
+      - framework: SnapKit
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.DiscoverModule
+      GENERATE_INFOPLIST_FILE: YES
+
+  MeModule:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/Modules/MeModule
+    dependencies:
+      - target: WeChatUI
+      - target: WeChatRouter
+      - target: RouterKit
+      - target: ExtensionKit
+      - framework: SnapKit
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.MeModule
+      GENERATE_INFOPLIST_FILE: YES
+
+  # ========== 主工程 ==========
+  WeChatSwift:
+    type: application
+    platform: iOS
+    sources:
+      - WeChatSwift
+    dependencies:
+      - target: ChatModule
+      - target: ContactModule
+      - target: DiscoverModule
+      - target: MeModule
+      - target: WeChatRouter
+        embed: true
+      - target: WeChatUI
+        embed: true
+      - target: WeChatBridge
+        embed: true
+      - target: RouterKit
+        embed: true
+      - target: ExtensionKit
+        embed: true
+    info:
+      path: WeChatSwift/Info.plist
+      properties:
+        CFBundleDevelopmentRegion: zh_CN
+        CFBundleDisplayName: 微信
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleInfoDictionaryVersion: "6.0"
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        LSRequiresIPhoneOS: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        UILaunchScreen:
+          UIColorName: ""
+          UIImageName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIUserInterfaceStyle: Light
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatSwift
+      SWIFT_VERSION: "5.0"
+      TARGETED_DEVICE_FAMILY: "1"
+      INFOPLIST_FILE: WeChatSwift/Info.plist

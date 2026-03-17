@@ -17,6 +17,10 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+# Foundation 二方库（本地开发）
+pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
+pod 'RouterKit', :path => './Foundation/RouterKit'
+
 # 共享的 pods
 def shared_pods
   pod 'SnapKit'
@@ -34,6 +38,10 @@ target 'WeChatSwift' do
   pod 'react-native-safe-area-context', :path => '../WeChatRN/node_modules/react-native-safe-area-context'
   shared_pods
 
+  # 主工程也需要访问 Foundation 二方库
+  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
+  pod 'RouterKit', :path => './Foundation/RouterKit'
+
   post_install do |installer|
     react_native_post_install(
       installer,
@@ -43,18 +51,18 @@ target 'WeChatSwift' do
   end
 end
 
-# 基础组件层
-target 'ExtensionKit' do
-end
-
-target 'RouterKit' do
-end
+# 基础组件层（现在作为外部依赖引入，不需要单独的 target）
+# ExtensionKit 和 RouterKit 已通过 pod 引入
 
 target 'WeChatUI' do
   shared_pods
+  # 依赖 Foundation 二方库
+  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
 end
 
 target 'WeChatRouter' do
+  # 依赖 Foundation 二方库
+  pod 'RouterKit', :path => './Foundation/RouterKit'
 end
 
 target 'WeChatBridge' do
@@ -73,16 +81,28 @@ target 'ChatModule' do
     :app_path => rn_project
   )
   shared_pods
+  # 依赖 Foundation 二方库
+  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
+  pod 'RouterKit', :path => './Foundation/RouterKit'
 end
 
 target 'ContactModule' do
   shared_pods
+  # 依赖 Foundation 二方库
+  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
+  pod 'RouterKit', :path => './Foundation/RouterKit'
 end
 
 target 'DiscoverModule' do
   shared_pods
+  # 依赖 Foundation 二方库
+  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
+  pod 'RouterKit', :path => './Foundation/RouterKit'
 end
 
 target 'MeModule' do
   shared_pods
+  # 依赖 Foundation 二方库
+  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
+  pod 'RouterKit', :path => './Foundation/RouterKit'
 end

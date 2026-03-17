@@ -7,31 +7,13 @@ options:
 
 # 文件分组配置 - 在 Xcode 中按层次显示
 fileGroups:
-  - Modules/Foundation
   - Modules/WeChatKit
   - Modules/Business
   - WeChatSwift
 
-# ========== 通用基础组件层（可跨项目复用）==========
+# ========== 项目基础组件层（微信特有）==========
+# 注意：ExtensionKit 和 RouterKit 已作为独立的 CocoaPods 二方库
 targets:
-  RouterKit:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/Foundation/RouterKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.foundation.RouterKit
-      GENERATE_INFOPLIST_FILE: YES
-
-  ExtensionKit:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/Foundation/ExtensionKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.foundation.ExtensionKit
-      GENERATE_INFOPLIST_FILE: YES
-
   # ========== 项目基础组件层（微信特有）==========
   WeChatUI:
     type: framework
@@ -39,7 +21,7 @@ targets:
     sources:
       - Modules/WeChatKit/WeChatUI
     dependencies:
-      - target: ExtensionKit
+      - framework: ExtensionKit
       - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatUI
@@ -51,7 +33,7 @@ targets:
     sources:
       - Modules/WeChatKit/WeChatRouter
     dependencies:
-      - target: RouterKit
+      - framework: RouterKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRouter
       GENERATE_INFOPLIST_FILE: YES
@@ -78,8 +60,8 @@ targets:
       - target: WeChatUI
       - target: WeChatRouter
       - target: WeChatBridge
-      - target: RouterKit
-      - target: ExtensionKit
+      - framework: RouterKit
+      - framework: ExtensionKit
       - framework: React
       - framework: React_RCTAppDelegate
       - framework: SnapKit
@@ -95,8 +77,8 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
-      - target: RouterKit
-      - target: ExtensionKit
+      - framework: RouterKit
+      - framework: ExtensionKit
       - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.ContactModule
@@ -110,8 +92,8 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
-      - target: RouterKit
-      - target: ExtensionKit
+      - framework: RouterKit
+      - framework: ExtensionKit
       - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.DiscoverModule
@@ -125,8 +107,8 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
-      - target: RouterKit
-      - target: ExtensionKit
+      - framework: RouterKit
+      - framework: ExtensionKit
       - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.MeModule
@@ -149,10 +131,7 @@ targets:
         embed: true
       - target: WeChatBridge
         embed: true
-      - target: RouterKit
-        embed: true
-      - target: ExtensionKit
-        embed: true
+      # ExtensionKit 和 RouterKit 通过 CocoaPods 引入，不需要手动 embed
     info:
       path: WeChatSwift/Info.plist
       properties:

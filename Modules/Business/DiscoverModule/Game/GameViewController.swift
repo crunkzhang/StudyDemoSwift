@@ -1,6 +1,7 @@
 import UIKit
 import WeChatUI
 import SnapKit
+import RouterKit
 
 public final class GameViewController: BaseViewController {
     public override func viewDidLoad() {
@@ -18,5 +19,14 @@ public final class GameViewController: BaseViewController {
             make.centerX.equalToSuperview()
             make.centerY.equalTo(view.safeAreaLayoutGuide)
         }
+    }
+}
+
+// MARK: - VCRoutable
+extension GameViewController: VCRoutable {
+    public static let routePattern = "discover/game"
+
+    public static func create(with params: [String: String]) -> UIViewController? {
+        return GameViewController()
     }
 }

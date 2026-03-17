@@ -1,6 +1,7 @@
 import UIKit
 import WeChatUI
 import SnapKit
+import RouterKit
 
 public final class ShakeViewController: BaseViewController {
     public override func viewDidLoad() {
@@ -18,5 +19,14 @@ public final class ShakeViewController: BaseViewController {
             make.centerX.equalToSuperview()
             make.centerY.equalTo(view.safeAreaLayoutGuide)
         }
+    }
+}
+
+// MARK: - VCRoutable
+extension ShakeViewController: VCRoutable {
+    public static let routePattern = "discover/shake"
+
+    public static func create(with params: [String: String]) -> UIViewController? {
+        return ShakeViewController()
     }
 }

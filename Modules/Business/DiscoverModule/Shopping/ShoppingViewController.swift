@@ -1,6 +1,7 @@
 import UIKit
 import WeChatUI
 import SnapKit
+import RouterKit
 
 public final class ShoppingViewController: BaseViewController {
     public override func viewDidLoad() {
@@ -18,5 +19,14 @@ public final class ShoppingViewController: BaseViewController {
             make.centerX.equalToSuperview()
             make.centerY.equalTo(view.safeAreaLayoutGuide)
         }
+    }
+}
+
+// MARK: - VCRoutable
+extension ShoppingViewController: VCRoutable {
+    public static let routePattern = "discover/shopping"
+
+    public static func create(with params: [String: String]) -> UIViewController? {
+        return ShoppingViewController()
     }
 }

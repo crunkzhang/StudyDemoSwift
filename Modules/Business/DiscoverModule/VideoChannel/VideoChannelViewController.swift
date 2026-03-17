@@ -1,6 +1,7 @@
 import UIKit
 import WeChatUI
 import SnapKit
+import RouterKit
 
 public final class VideoChannelViewController: BaseViewController {
     public override func viewDidLoad() {
@@ -18,5 +19,14 @@ public final class VideoChannelViewController: BaseViewController {
             make.centerX.equalToSuperview()
             make.centerY.equalTo(view.safeAreaLayoutGuide)
         }
+    }
+}
+
+// MARK: - VCRoutable
+extension VideoChannelViewController: VCRoutable {
+    public static let routePattern = "discover/videoChannel"
+
+    public static func create(with params: [String: String]) -> UIViewController? {
+        return VideoChannelViewController()
     }
 }

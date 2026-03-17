@@ -2,6 +2,7 @@ import UIKit
 import WeChatUI
 import React
 import WeChatRNKit
+import RouterKit
 
 public class RNChatDetailViewController: BaseViewController {
     private let chatId: String
@@ -41,5 +42,18 @@ public class RNChatDetailViewController: BaseViewController {
         rnView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
+    }
+}
+
+// MARK: - VCRoutable
+extension RNChatDetailViewController: VCRoutable {
+    public static let routePattern = "chat/detail"
+
+    public static func create(with params: [String: String]) -> UIViewController? {
+        guard let chatId = params["chatId"],
+              let contactName = params["contactName"] else {
+            return nil
+        }
+        return RNChatDetailViewController(chatId: chatId, contactName: contactName)
     }
 }

@@ -5,6 +5,13 @@ options:
     iOS: "15.1"
   developmentLanguage: zh-Hans
 
+# 文件分组配置 - 在 Xcode 中按层次显示
+fileGroups:
+  - Modules/Foundation
+  - Modules/WeChatKit
+  - Modules/Business
+  - WeChatSwift
+
 # ========== 通用基础组件层（可跨项目复用）==========
 targets:
   RouterKit:
@@ -66,7 +73,7 @@ targets:
     type: framework
     platform: iOS
     sources:
-      - Modules/Modules/ChatModule
+      - Modules/Business/ChatModule
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
@@ -84,7 +91,7 @@ targets:
     type: framework
     platform: iOS
     sources:
-      - Modules/Modules/ContactModule
+      - Modules/Business/ContactModule
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
@@ -99,7 +106,7 @@ targets:
     type: framework
     platform: iOS
     sources:
-      - Modules/Modules/DiscoverModule
+      - Modules/Business/DiscoverModule
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
@@ -114,7 +121,7 @@ targets:
     type: framework
     platform: iOS
     sources:
-      - Modules/Modules/MeModule
+      - Modules/Business/MeModule
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter

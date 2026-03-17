@@ -9,7 +9,7 @@ import DiscoverModule
 import MeModule
 
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, ReactNativeFactoryProvider {
     var reactNativeDelegate: ReactNativeDelegate?
     var reactNativeFactory: RCTReactNativeFactory?
 
@@ -22,6 +22,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         reactNativeDelegate = delegate
         let factory = RCTReactNativeFactory(delegate: delegate)
         reactNativeFactory = factory
+
+        // 设置 RN Factory provider
+        RNFactoryManager.shared.provider = self
 
         // 注册所有业务模块的路由
         ChatModule.registerRoutes()

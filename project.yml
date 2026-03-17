@@ -38,18 +38,6 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRouter
       GENERATE_INFOPLIST_FILE: YES
 
-  WeChatBridge:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/WeChatKit/WeChatBridge
-    dependencies:
-      - framework: React
-      - framework: React_RCTAppDelegate
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatBridge
-      GENERATE_INFOPLIST_FILE: YES
-
   # ========== 业务模块层 ==========
   ChatModule:
     type: framework
@@ -59,7 +47,6 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
-      - target: WeChatBridge
       - framework: RouterKit
       - framework: ExtensionKit
       - framework: React
@@ -128,8 +115,6 @@ targets:
       - target: WeChatRouter
         embed: true
       - target: WeChatUI
-        embed: true
-      - target: WeChatBridge
         embed: true
       # ExtensionKit 和 RouterKit 通过 CocoaPods 引入，不需要手动 embed
     info:

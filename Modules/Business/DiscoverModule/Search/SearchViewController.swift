@@ -22,11 +22,11 @@ public final class SearchViewController: BaseViewController {
     }
 }
 
-// MARK: - NativePageRoutable
-extension SearchViewController: NativePageRoutable {
+// MARK: - PageRoutable
+extension SearchViewController: PageRoutable {
     public static let routePattern = "discover/search"
 
-    public static func createNativePage(with params: [String: String]) -> UIViewController? {
+    public static func createPage(with params: [String: String]) -> UIViewController? {
         return SearchViewController()
     }
 }

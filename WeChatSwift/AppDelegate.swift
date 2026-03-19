@@ -3,6 +3,7 @@ import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
 import RouterKit
+import WeChatRN
 import ChatModule
 import ContactModule
 import DiscoverModule
@@ -27,6 +28,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ReactNativeFactoryProvide
         RNFactoryManager.shared.provider = self
 
         // 注册所有业务模块的路由
+        RNBaseViewController.registerPageRoute()
         ChatModule.registerRoutes()
         ContactModule.registerRoutes()
         DiscoverModule.registerRoutes()

@@ -22,11 +22,11 @@ public final class MomentsViewController: BaseViewController {
     }
 }
 
-// MARK: - NativePageRoutable
-extension MomentsViewController: NativePageRoutable {
+// MARK: - PageRoutable
+extension MomentsViewController: PageRoutable {
     public static let routePattern = "discover/moments"
 
-    public static func createNativePage(with params: [String: String]) -> UIViewController? {
+    public static func createPage(with params: [String: String]) -> UIViewController? {
         return MomentsViewController()
     }
 }

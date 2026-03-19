@@ -22,11 +22,11 @@ public final class ShoppingViewController: BaseViewController {
     }
 }
 
-// MARK: - NativePageRoutable
-extension ShoppingViewController: NativePageRoutable {
+// MARK: - PageRoutable
+extension ShoppingViewController: PageRoutable {
     public static let routePattern = "discover/shopping"
 
-    public static func createNativePage(with params: [String: String]) -> UIViewController? {
+    public static func createPage(with params: [String: String]) -> UIViewController? {
         return ShoppingViewController()
     }
 }

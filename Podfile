@@ -26,6 +26,16 @@ def shared_pods
   pod 'SnapKit'
 end
 
+pre_install do |installer|
+  installer.pod_targets.each do |pod|
+    if pod.name == 'RouterKit'
+      def pod.build_type
+        Pod::BuildType.dynamic_framework
+      end
+    end
+  end
+end
+
 target 'WeChatSwift' do
   rn_path = '../WeChatRN/node_modules/react-native'
 
@@ -61,40 +71,39 @@ target 'WeChatUI' do
 end
 
 target 'WeChatRouter' do
-  # 依赖 Foundation 二方库
   pod 'RouterKit', :path => './Foundation/RouterKit'
 end
 
 # 业务模块层
 target 'ChatModule' do
+  shared_pods
+  # 依赖 Foundation 二方库
+  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
+end
+
+target 'WeChatRN' do
   rn_path = '../WeChatRN/node_modules/react-native'
   use_react_native!(
     :path => rn_path,
     :app_path => rn_project
   )
   shared_pods
-  # 依赖 Foundation 二方库
-  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
-  pod 'RouterKit', :path => './Foundation/RouterKit'
 end
 
 target 'ContactModule' do
   shared_pods
   # 依赖 Foundation 二方库
   pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
-  pod 'RouterKit', :path => './Foundation/RouterKit'
 end
 
 target 'DiscoverModule' do
   shared_pods
   # 依赖 Foundation 二方库
   pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
-  pod 'RouterKit', :path => './Foundation/RouterKit'
 end
 
 target 'MeModule' do
   shared_pods
   # 依赖 Foundation 二方库
   pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
-  pod 'RouterKit', :path => './Foundation/RouterKit'
 end

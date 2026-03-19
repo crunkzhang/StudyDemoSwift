@@ -38,6 +38,21 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRouter
       GENERATE_INFOPLIST_FILE: YES
 
+  WeChatRN:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/WeChatKit/WeChatRN
+    dependencies:
+      - target: WeChatUI
+      - framework: RouterKit
+      - framework: React
+      - framework: React_RCTAppDelegate
+      - framework: SnapKit
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRN
+      GENERATE_INFOPLIST_FILE: YES
+
   # ========== 业务模块层 ==========
   ChatModule:
     type: framework
@@ -47,10 +62,9 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
+      - target: WeChatRN
       - framework: RouterKit
       - framework: ExtensionKit
-      - framework: React
-      - framework: React_RCTAppDelegate
       - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.ChatModule
@@ -79,6 +93,7 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
+      - target: WeChatRN
       - framework: RouterKit
       - framework: ExtensionKit
       - framework: SnapKit
@@ -112,6 +127,8 @@ targets:
       - target: ContactModule
       - target: DiscoverModule
       - target: MeModule
+      - target: WeChatRN
+        embed: true
       - target: WeChatRouter
         embed: true
       - target: WeChatUI

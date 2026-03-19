@@ -22,11 +22,11 @@ public final class GameViewController: BaseViewController {
     }
 }
 
-// MARK: - NativePageRoutable
-extension GameViewController: NativePageRoutable {
+// MARK: - PageRoutable
+extension GameViewController: PageRoutable {
     public static let routePattern = "discover/game"
 
-    public static func createNativePage(with params: [String: String]) -> UIViewController? {
+    public static func createPage(with params: [String: String]) -> UIViewController? {
         return GameViewController()
     }
 }

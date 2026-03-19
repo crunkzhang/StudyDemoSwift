@@ -70,3 +70,4 @@ iOSInjectionProject/
 
 # React Native (from WeChatRN)
 .xcode.env.local
+.claude/

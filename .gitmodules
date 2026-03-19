@@ -1,6 +1,6 @@
 [submodule "Foundation/ExtensionKit"]
 	path = Foundation/ExtensionKit
 	url = ./Foundation/ExtensionKit
-[submodule "Foundation/RouterKit"]
-	path = Foundation/RouterKit
-	url = ./Foundation/RouterKit
+[submodule "Foundation/NavigateKit"]
+	path = Foundation/NavigateKit
+	url = ./Foundation/NavigateKit

@@ -1,5 +1,5 @@
 import UIKit
-import RouterKit
+import WeChatRouter
 
 extension MeModule: ModuleRoutable {
     public static func registerRoutes() {

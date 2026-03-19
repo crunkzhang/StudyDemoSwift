@@ -11,8 +11,6 @@ fileGroups:
   - Modules/Business
   - WeChatSwift
 
-# ========== 项目基础组件层（微信特有）==========
-# 注意：ExtensionKit 和 RouterKit 已作为独立的 CocoaPods 二方库
 targets:
   # ========== 项目基础组件层（微信特有）==========
   WeChatUI:
@@ -33,7 +31,7 @@ targets:
     sources:
       - Modules/WeChatKit/WeChatRouter
     dependencies:
-      - framework: RouterKit
+      - framework: NavigateKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRouter
       GENERATE_INFOPLIST_FILE: YES
@@ -45,7 +43,7 @@ targets:
       - Modules/WeChatKit/WeChatRN
     dependencies:
       - target: WeChatUI
-      - framework: RouterKit
+      - target: WeChatRouter
       - framework: React
       - framework: React_RCTAppDelegate
       - framework: SnapKit
@@ -63,7 +61,6 @@ targets:
       - target: WeChatUI
       - target: WeChatRouter
       - target: WeChatRN
-      - framework: RouterKit
       - framework: ExtensionKit
       - framework: SnapKit
     settings:
@@ -78,7 +75,6 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
-      - framework: RouterKit
       - framework: ExtensionKit
       - framework: SnapKit
     settings:
@@ -94,7 +90,6 @@ targets:
       - target: WeChatUI
       - target: WeChatRouter
       - target: WeChatRN
-      - framework: RouterKit
       - framework: ExtensionKit
       - framework: SnapKit
     settings:
@@ -109,7 +104,6 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
-      - framework: RouterKit
       - framework: ExtensionKit
       - framework: SnapKit
     settings:
@@ -133,7 +127,6 @@ targets:
         embed: true
       - target: WeChatUI
         embed: true
-      # ExtensionKit 和 RouterKit 通过 CocoaPods 引入，不需要手动 embed
     info:
       path: WeChatSwift/Info.plist
       properties:

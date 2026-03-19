@@ -1,7 +1,7 @@
 import UIKit
 import WeChatUI
 import SnapKit
-import RouterKit
+import WeChatRouter
 import WeChatRouter
 
 public class ChatViewController: BaseViewController {

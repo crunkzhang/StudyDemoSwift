@@ -1,7 +1,7 @@
 import UIKit
 import WeChatUI
 import SnapKit
-import RouterKit
+import WeChatRouter
 
 public final class ShoppingViewController: BaseViewController {
     public override func viewDidLoad() {

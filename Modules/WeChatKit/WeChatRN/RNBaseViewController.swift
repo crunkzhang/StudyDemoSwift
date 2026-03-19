@@ -2,7 +2,7 @@ import UIKit
 import SnapKit
 import React
 import WeChatUI
-import RouterKit
+import WeChatRouter
 
 open class RNBaseViewController: BaseViewController {
     private let moduleName: String

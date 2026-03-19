@@ -2,7 +2,7 @@ import UIKit
 import WeChatUI
 import SnapKit
 import ExtensionKit
-import RouterKit
+import WeChatRouter
 import WeChatRouter
 
 public class DiscoverViewController: BaseViewController {

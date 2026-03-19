@@ -1,7 +1,7 @@
 import UIKit
 import WeChatUI
 import SnapKit
-import RouterKit
+import WeChatRouter
 
 public final class NearbyViewController: BaseViewController {
     public override func viewDidLoad() {

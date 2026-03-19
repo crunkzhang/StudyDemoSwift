@@ -22,11 +22,11 @@ public final class ShakeViewController: BaseViewController {
     }
 }
 
-// MARK: - VCRoutable
-extension ShakeViewController: VCRoutable {
+// MARK: - NativePageRoutable
+extension ShakeViewController: NativePageRoutable {
     public static let routePattern = "discover/shake"
 
-    public static func create(with params: [String: String]) -> UIViewController? {
+    public static func createNativePage(with params: [String: String]) -> UIViewController? {
         return ShakeViewController()
     }
 }

@@ -38,19 +38,23 @@ open class RNBaseViewController: BaseViewController {
 }
 
 // MARK: - Route Registration
-extension RNBaseViewController {
-
+extension RNBaseViewController: RNPageRoutable {
+    
     /// 注册 RN 页面路由
     /// - Parameters:
     ///   - pattern: 路由模式，如 "chat/detail"
     ///   - moduleName: RN 模块名，如 "ChatDetail"
     ///   - propsTransformer: 将路由参数转换为 RN props，默认透传
-    public static func registerRNRoute(
+    public static func registerOldRNRoute(
         pattern: String,
         moduleName: String
     ) {
         Router.shared.register(pattern) { params in
             return RNBaseViewController(moduleName: moduleName, props: params)
         }
+    }
+    
+    public static func createRNPage(moduleName: String, params: [String : String]) -> UIViewController? {
+        RNBaseViewController(moduleName: moduleName, props: params)
     }
 }

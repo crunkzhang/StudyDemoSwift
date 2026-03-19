@@ -3,14 +3,14 @@ import RouterKit
 
 extension DiscoverModule: ModuleRoutable {
     public static func registerRoutes() {
-        MomentsViewController.registerRoute()
-        VideoChannelViewController.registerRoute()
-        ScanViewController.registerRoute()
-        ShakeViewController.registerRoute()
-        NearbyViewController.registerRoute()
-        ShoppingViewController.registerRoute()
-        GameViewController.registerRoute()
-        SearchViewController.registerRoute()
+        MomentsViewController.registerNativeRoute()
+        VideoChannelViewController.registerNativeRoute()
+        ScanViewController.registerNativeRoute()
+        ShakeViewController.registerNativeRoute()
+        NearbyViewController.registerNativeRoute()
+        ShoppingViewController.registerNativeRoute()
+        GameViewController.registerNativeRoute()
+        SearchViewController.registerNativeRoute()
     }
 }
 

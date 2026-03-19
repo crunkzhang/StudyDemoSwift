@@ -3,10 +3,7 @@ import RouterKit
 
 extension ChatModule: ModuleRoutable {
     public static func registerRoutes() {
-        RNBaseViewController.registerRNRoute(
-            pattern: "chat/detail",
-            moduleName: "ChatDetail"
-        )
+        RNBaseViewController.registerRNRoute(moduleName: "ChatDetail")
     }
 }
 

@@ -22,11 +22,11 @@ public final class ScanViewController: BaseViewController {
     }
 }
 
-// MARK: - VCRoutable
-extension ScanViewController: VCRoutable {
+// MARK: - NativePageRoutable
+extension ScanViewController: NativePageRoutable {
     public static let routePattern = "discover/scan"
 
-    public static func create(with params: [String: String]) -> UIViewController? {
+    public static func createNativePage(with params: [String: String]) -> UIViewController? {
         return ScanViewController()
     }
 }

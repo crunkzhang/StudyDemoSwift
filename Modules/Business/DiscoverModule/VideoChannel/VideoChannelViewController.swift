@@ -22,11 +22,11 @@ public final class VideoChannelViewController: BaseViewController {
     }
 }
 
-// MARK: - VCRoutable
-extension VideoChannelViewController: VCRoutable {
+// MARK: - NativePageRoutable
+extension VideoChannelViewController: NativePageRoutable {
     public static let routePattern = "discover/videoChannel"
 
-    public static func create(with params: [String: String]) -> UIViewController? {
+    public static func createNativePage(with params: [String: String]) -> UIViewController? {
         return VideoChannelViewController()
     }
 }

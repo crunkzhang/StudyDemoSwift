@@ -22,11 +22,11 @@ public final class NearbyViewController: BaseViewController {
     }
 }
 
-// MARK: - VCRoutable
-extension NearbyViewController: VCRoutable {
+// MARK: - NativePageRoutable
+extension NearbyViewController: NativePageRoutable {
     public static let routePattern = "discover/nearby"
 
-    public static func create(with params: [String: String]) -> UIViewController? {
+    public static func createNativePage(with params: [String: String]) -> UIViewController? {
         return NearbyViewController()
     }
 }

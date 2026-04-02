@@ -1,12 +1,11 @@
 public enum Routes {
     public static let rn    = "wechat://rn"
-    
-    public static let moments      = "wechat://discover/moments"
-    public static let videoChannel  = "wechat://discover/videoChannel"
-    public static let scan          = "wechat://discover/scan"
-    public static let shake         = "wechat://discover/shake"
-    public static let nearby        = "wechat://discover/nearby"
-    public static let shopping      = "wechat://discover/shopping"
-    public static let game          = "wechat://discover/game"
-    public static let search        = "wechat://discover/search"
+    public static let moments      = "wechat://rn?module=Moments"
+    public static let videoChannel  = "wechat://rn?module=VideoChannel"
+    public static let scan          = "wechat://rn?module=Scan"
+    public static let shake         = "wechat://rn?module=Shake"
+    public static let nearby        = "wechat://rn?module=Nearby"
+    public static let shopping      = "wechat://rn?module=Shopping"
+    public static let search        = "wechat://rn?module=Search"
+    public static let game          = "wechat://rn?module=GameCenter"
 }

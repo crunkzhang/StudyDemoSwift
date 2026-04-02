@@ -12,10 +12,6 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, '15.1'
 prepare_react_native_project!
 
-# Foundation 二方库（顶层声明确保所有 target 可见 modulemap）
-pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
-pod 'NavigateKit', :path => './Foundation/NavigateKit'
-
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
@@ -27,9 +23,9 @@ end
 target 'WeChatSwift' do
   use_react_native!(:path => rn_path, :app_path => rn_project)
   pod 'react-native-safe-area-context', :path => '../WeChatRN/node_modules/react-native-safe-area-context'
+  pod 'RNScreens', :path => '../WeChatRN/node_modules/react-native-screens'
+  pod 'react-native-webview', :path => '../WeChatRN/node_modules/react-native-webview'
   pod 'SnapKit'
-  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
-  pod 'NavigateKit', :path => './Foundation/NavigateKit'
 
   post_install do |installer|
     react_native_post_install(
@@ -44,36 +40,32 @@ end
 
 target 'ChatModule' do
   pod 'SnapKit'
-  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
 end
 
 target 'ContactModule' do
   pod 'SnapKit'
-  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
 end
 
 target 'DiscoverModule' do
   pod 'SnapKit'
-  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
 end
 
 target 'MeModule' do
   pod 'SnapKit'
-  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
 end
 
 # ========== WeChatKit 层 ==========
 
 target 'WeChatUI' do
   pod 'SnapKit'
-  pod 'ExtensionKit', :path => './Foundation/ExtensionKit'
 end
 
 target 'WeChatRouter' do
-  pod 'NavigateKit', :path => './Foundation/NavigateKit'
 end
 
 target 'WeChatRN' do
   use_react_native!(:path => rn_path, :app_path => rn_project)
+  pod 'RNScreens', :path => '../WeChatRN/node_modules/react-native-screens'
+  pod 'react-native-webview', :path => '../WeChatRN/node_modules/react-native-webview'
   pod 'SnapKit'
 end

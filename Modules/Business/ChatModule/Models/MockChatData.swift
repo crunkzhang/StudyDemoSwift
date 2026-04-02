@@ -52,6 +52,19 @@ public struct MockChatData {
         "周一再说吧",
     ]
 
+    private static let avatarURLs = [
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1502323777036-f29e3972d82f?auto=format&fit=crop&w=240&q=80",
+    ]
+
     public static func generate() -> [ChatConversation] {
         let calendar = Calendar.current
         let now = Date()
@@ -62,6 +75,7 @@ public struct MockChatData {
             let name = names[nameIdx]
             let initial = String(name.prefix(1))
             let color = avatarColors[i % avatarColors.count]
+            let avatarURL = avatarURLs[i % avatarURLs.count]
             let message = messages[i % messages.count]
 
             // Spread timestamps: first 10 today, next 10 yesterday, rest further back
@@ -82,6 +96,7 @@ public struct MockChatData {
             conversations.append(ChatConversation(
                 id: "chat_\(i)",
                 contactName: name,
+                avatarURL: avatarURL,
                 avatarInitial: initial,
                 avatarColor: color,
                 lastMessage: message,

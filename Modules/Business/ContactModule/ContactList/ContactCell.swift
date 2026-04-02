@@ -1,12 +1,14 @@
 import UIKit
 import SnapKit
+import ExtensionKit
 
 public class ContactCell: UITableViewCell {
     public static let reuseID = "ContactCell"
 
     private let avatarView: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = 4
+        v.layer.cornerRadius = 12
+        v.layer.cornerCurve = .continuous
         v.clipsToBounds = true
         return v
     }()
@@ -21,8 +23,8 @@ public class ContactCell: UITableViewCell {
 
     private let nameLabel: UILabel = {
         let l = UILabel()
-        l.font = .systemFont(ofSize: 16)
-        l.textColor = .black
+        l.font = .systemFont(ofSize: 17, weight: .medium)
+        l.textColor = UIColor(hex: "#14171B")
         return l
     }()
 
@@ -36,14 +38,17 @@ public class ContactCell: UITableViewCell {
     }
 
     private func setupViews() {
+        selectionStyle = .none
+        backgroundColor = .white
+
         avatarView.addSubview(initialLabel)
         contentView.addSubview(avatarView)
         contentView.addSubview(nameLabel)
 
         avatarView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(12)
+            make.leading.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(36)
+            make.width.height.equalTo(42)
         }
 
         initialLabel.snp.makeConstraints { make in
@@ -51,9 +56,9 @@ public class ContactCell: UITableViewCell {
         }
 
         nameLabel.snp.makeConstraints { make in
-            make.leading.equalTo(avatarView.snp.trailing).offset(10)
+            make.leading.equalTo(avatarView.snp.trailing).offset(14)
             make.centerY.equalToSuperview()
-            make.trailing.lessThanOrEqualToSuperview().offset(-12)
+            make.trailing.lessThanOrEqualToSuperview().offset(-14)
         }
     }
 

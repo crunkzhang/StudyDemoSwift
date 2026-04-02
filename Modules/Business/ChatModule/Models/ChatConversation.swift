@@ -3,15 +3,17 @@ import Foundation
 public struct ChatConversation {
     public let id: String
     public let contactName: String
+    public let avatarURL: String
     public let avatarInitial: String
     public let avatarColor: UInt32
     public let lastMessage: String
     public let timestamp: Date
     public let unreadCount: Int
 
-    public init(id: String, contactName: String, avatarInitial: String, avatarColor: UInt32, lastMessage: String, timestamp: Date, unreadCount: Int) {
+    public init(id: String, contactName: String, avatarURL: String, avatarInitial: String, avatarColor: UInt32, lastMessage: String, timestamp: Date, unreadCount: Int) {
         self.id = id
         self.contactName = contactName
+        self.avatarURL = avatarURL
         self.avatarInitial = avatarInitial
         self.avatarColor = avatarColor
         self.lastMessage = lastMessage

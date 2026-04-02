@@ -2,7 +2,6 @@ import UIKit
 import WeChatUI
 import SnapKit
 import WeChatRouter
-import WeChatRouter
 
 public class ChatViewController: BaseViewController {
     private var conversations: [ChatConversation] = []
@@ -12,14 +11,18 @@ public class ChatViewController: BaseViewController {
         tv.dataSource = self
         tv.delegate = self
         tv.register(ChatListCell.self, forCellReuseIdentifier: ChatListCell.reuseID)
-        tv.rowHeight = 64
-        tv.separatorInset = UIEdgeInsets(top: 0, left: 62, bottom: 0, right: 0)
+        tv.rowHeight = 78
+        tv.separatorStyle = .singleLine
+        tv.separatorInset = UIEdgeInsets(top: 0, left: 74, bottom: 0, right: 14)
+        tv.separatorColor = UIColor(white: 0.93, alpha: 1)
+        tv.backgroundColor = UIColor(white: 0.97, alpha: 1)
+        tv.tableFooterView = UIView()
         return tv
     }()
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor(white: 0.97, alpha: 1)
         title = "微信"
         conversations = MockChatData.generate()
         setupTableView()

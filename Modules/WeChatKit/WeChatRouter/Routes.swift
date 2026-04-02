@@ -8,4 +8,5 @@ public enum Routes {
     public static let shopping      = "wechat://rn?module=Shopping"
     public static let search        = "wechat://rn?module=Search"
     public static let game          = "wechat://rn?module=GameCenter"
+    public static let settings      = "wechat://rn?module=Settings"
 }

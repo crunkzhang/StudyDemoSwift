@@ -27,6 +27,23 @@ target 'WeChatSwift' do
   pod 'react-native-webview', :path => '../WeChatRN/node_modules/react-native-webview'
   pod 'SnapKit'
 
+  # 业务模块只继承搜索路径，通过依赖 WeChatUI 获取 SnapKit 符号
+  target 'ChatModule' do
+    inherit! :search_paths
+  end
+
+  target 'ContactModule' do
+    inherit! :search_paths
+  end
+
+  target 'DiscoverModule' do
+    inherit! :search_paths
+  end
+
+  target 'MeModule' do
+    inherit! :search_paths
+  end
+
   post_install do |installer|
     react_native_post_install(
       installer,
@@ -36,31 +53,10 @@ target 'WeChatSwift' do
   end
 end
 
-# ========== 业务模块层 ==========
-
-target 'ChatModule' do
-  pod 'SnapKit'
-end
-
-target 'ContactModule' do
-  pod 'SnapKit'
-end
-
-target 'DiscoverModule' do
-  pod 'SnapKit'
-end
-
-target 'MeModule' do
-  pod 'SnapKit'
-end
-
 # ========== WeChatKit 层 ==========
 
 target 'WeChatUI' do
   pod 'SnapKit'
-end
-
-target 'WeChatRouter' do
 end
 
 target 'WeChatRN' do

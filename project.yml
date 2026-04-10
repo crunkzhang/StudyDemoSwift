@@ -33,6 +33,22 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.NavigateKit
       GENERATE_INFOPLIST_FILE: YES
 
+  DDNetwork:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Foundation/DDNetwork/Core
+        group: Foundation/DDNetwork
+      - path: Foundation/DDNetwork/Models
+        group: Foundation/DDNetwork
+      - path: Foundation/DDNetwork/Interceptors
+        group: Foundation/DDNetwork
+      - path: Foundation/DDNetwork/Build
+        group: Foundation/DDNetwork
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.DDNetwork
+      GENERATE_INFOPLIST_FILE: YES
+
   # ========== 项目基础组件层（微信特有）==========
   WeChatUI:
     type: framework
@@ -41,7 +57,6 @@ targets:
       - Modules/WeChatKit/WeChatUI
     dependencies:
       - target: ExtensionKit
-      - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatUI
       GENERATE_INFOPLIST_FILE: YES
@@ -57,6 +72,17 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRouter
       GENERATE_INFOPLIST_FILE: YES
 
+  WeChatNetAPI:
+    type: framework
+    platform: iOS
+    sources:
+      - Modules/WeChatKit/WeChatNetAPI
+    dependencies:
+      - target: DDNetwork
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatNetAPI
+      GENERATE_INFOPLIST_FILE: YES
+
   WeChatRN:
     type: framework
     platform: iOS
@@ -65,9 +91,6 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
-      - framework: React
-      - framework: React_RCTAppDelegate
-      - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRN
       GENERATE_INFOPLIST_FILE: YES
@@ -83,7 +106,6 @@ targets:
       - target: WeChatRouter
       - target: WeChatRN
       - target: ExtensionKit
-      - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.ChatModule
       GENERATE_INFOPLIST_FILE: YES
@@ -97,7 +119,6 @@ targets:
       - target: WeChatUI
       - target: WeChatRouter
       - target: ExtensionKit
-      - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.ContactModule
       GENERATE_INFOPLIST_FILE: YES
@@ -112,7 +133,6 @@ targets:
       - target: WeChatRouter
       - target: WeChatRN
       - target: ExtensionKit
-      - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.DiscoverModule
       GENERATE_INFOPLIST_FILE: YES
@@ -125,8 +145,8 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
+      - target: WeChatNetAPI
       - target: ExtensionKit
-      - framework: SnapKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.MeModule
       GENERATE_INFOPLIST_FILE: YES
@@ -142,9 +162,13 @@ targets:
       - target: ContactModule
       - target: DiscoverModule
       - target: MeModule
+      - target: DDNetwork
+        embed: true
       - target: NavigateKit
         embed: true
       - target: ExtensionKit
+        embed: true
+      - target: WeChatNetAPI
         embed: true
       - target: WeChatRN
         embed: true

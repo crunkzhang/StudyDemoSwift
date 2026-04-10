@@ -3,8 +3,11 @@ import WeChatUI
 import SnapKit
 import ExtensionKit
 import WeChatRouter
+import WeChatNetAPI
 
 public class MeViewController: BaseViewController {
+    private static let defaultStatusText = "状态 · 今天也在认真生活"
+
     fileprivate struct MeItem {
         let icon: String
         let iconColor: UIColor
@@ -25,6 +28,67 @@ public class MeViewController: BaseViewController {
             MeItem(icon: "gearshape.fill", iconColor: UIColor(hex: "#576B95"), title: "设置"),
         ],
     ]
+
+    private let profileService = MeProfileService(
+        api: APIClient(env: .dev)
+    )
+
+    private static let avatarImageCache = NSCache<NSString, UIImage>()
+
+    private var representedAvatarURL: String?
+    private let avatarView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(hex: "#07C160")
+        view.layer.cornerRadius = 18
+        view.layer.cornerCurve = .continuous
+        view.clipsToBounds = true
+        return view
+    }()
+
+    private let avatarImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        return imageView
+    }()
+
+    private let avatarLabel: UILabel = {
+        let label = UILabel()
+        label.text = "我"
+        label.textColor = .white
+        label.font = .systemFont(ofSize: 30, weight: .bold)
+        label.textAlignment = .center
+        return label
+    }()
+
+    private let statusPill: UILabel = {
+        let label = UILabel()
+        label.text = "状态 · 今天也在认真生活"
+        label.font = .systemFont(ofSize: 12, weight: .semibold)
+        label.textColor = UIColor(hex: "#526168")
+        label.backgroundColor = UIColor(hex: "#F5F7F8")
+        label.layer.cornerRadius = 13
+        label.layer.cornerCurve = .continuous
+        label.clipsToBounds = true
+        label.textAlignment = .center
+        return label
+    }()
+
+    private let nameLabel: UILabel = {
+        let label = UILabel()
+        label.text = "用户"
+        label.font = .systemFont(ofSize: 26, weight: .bold)
+        label.textColor = UIColor(hex: "#101114")
+        return label
+    }()
+
+    private let idLabel: UILabel = {
+        let label = UILabel()
+        label.text = "微信号 wxid_demo"
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.textColor = UIColor(hex: "#6F7682")
+        return label
+    }()
 
     private lazy var tableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .insetGrouped)
@@ -50,6 +114,7 @@ public class MeViewController: BaseViewController {
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        loadProfileStatus()
     }
 
     public override func viewWillDisappear(_ animated: Bool) {
@@ -74,38 +139,6 @@ public class MeViewController: BaseViewController {
         panel.layer.cornerRadius = 26
         panel.layer.cornerCurve = .continuous
 
-        let avatarView = UIView()
-        avatarView.backgroundColor = UIColor(hex: "#07C160")
-        avatarView.layer.cornerRadius = 18
-        avatarView.layer.cornerCurve = .continuous
-        avatarView.clipsToBounds = true
-
-        let avatarLabel = UILabel()
-        avatarLabel.text = "我"
-        avatarLabel.textColor = .white
-        avatarLabel.font = .systemFont(ofSize: 30, weight: .bold)
-        avatarLabel.textAlignment = .center
-
-        let nameLabel = UILabel()
-        nameLabel.text = "用户"
-        nameLabel.font = .systemFont(ofSize: 26, weight: .bold)
-        nameLabel.textColor = UIColor(hex: "#101114")
-
-        let idLabel = UILabel()
-        idLabel.text = "微信号 wxid_demo"
-        idLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        idLabel.textColor = UIColor(hex: "#6F7682")
-
-        let statusPill = UILabel()
-        statusPill.text = "状态 · 今天也在认真生活"
-        statusPill.font = .systemFont(ofSize: 12, weight: .semibold)
-        statusPill.textColor = UIColor(hex: "#526168")
-        statusPill.backgroundColor = UIColor(hex: "#F5F7F8")
-        statusPill.layer.cornerRadius = 13
-        statusPill.layer.cornerCurve = .continuous
-        statusPill.clipsToBounds = true
-        statusPill.textAlignment = .center
-
         let qrWrap = UIView()
         qrWrap.backgroundColor = UIColor(hex: "#F5F7F8")
         qrWrap.layer.cornerRadius = 18
@@ -121,6 +154,7 @@ public class MeViewController: BaseViewController {
 
         header.addSubview(panel)
         panel.addSubview(avatarView)
+        avatarView.addSubview(avatarImageView)
         avatarView.addSubview(avatarLabel)
         panel.addSubview(nameLabel)
         panel.addSubview(idLabel)
@@ -144,6 +178,10 @@ public class MeViewController: BaseViewController {
 
         avatarLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
+        }
+
+        avatarImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
 
         nameLabel.snp.makeConstraints { make in
@@ -178,6 +216,47 @@ public class MeViewController: BaseViewController {
         }
 
         return header
+    }
+
+    private func loadProfileStatus() {
+        Task { [weak self] in
+            guard let self else { return }
+            let header = await profileService.fetchHeaderData()
+            statusPill.text = header.statusText
+            updateAvatar(with: header.avatarURL)
+        }
+    }
+
+    private func updateAvatar(with url: URL?) {
+        avatarImageView.image = nil
+        avatarLabel.isHidden = false
+        representedAvatarURL = url?.absoluteString
+
+        guard let url else { return }
+        let urlString = url.absoluteString
+
+        if let cachedImage = Self.avatarImageCache.object(forKey: urlString as NSString) {
+            avatarImageView.image = cachedImage
+            avatarLabel.isHidden = true
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard
+                let self,
+                let data,
+                let image = UIImage(data: data)
+            else {
+                return
+            }
+
+            Self.avatarImageCache.setObject(image, forKey: urlString as NSString)
+            DispatchQueue.main.async {
+                guard self.representedAvatarURL == urlString else { return }
+                self.avatarImageView.image = image
+                self.avatarLabel.isHidden = true
+            }
+        }.resume()
     }
 }
 

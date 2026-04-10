@@ -1,5 +1,4 @@
 import UIKit
-import SnapKit
 import React
 import WeChatUI
 import WeChatRouter

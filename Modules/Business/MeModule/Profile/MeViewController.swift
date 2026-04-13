@@ -29,9 +29,7 @@ public class MeViewController: BaseViewController {
         ],
     ]
 
-    private let profileService = MeProfileService(
-        api: APIClient(env: .dev)
-    )
+    private let profileService = MeProfileService()
 
     private static let avatarImageCache = NSCache<NSString, UIImage>()
 

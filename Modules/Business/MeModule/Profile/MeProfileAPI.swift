@@ -8,6 +8,7 @@ struct MeProfileDTO: Decodable {
 
 struct GetProfile: APIEndpoint {
     typealias DataType = MeProfileDTO
+    let service = APIService.user.rawValue
     let path = "/profile/me"
 }
 
@@ -19,6 +20,7 @@ struct DogImageResp: Decodable {
 
 struct GetRandomDogImage: NetEndpoint {
     typealias Response = DogImageResp
+    let service = APIService.petMock.rawValue
     let path = "/api/breeds/image/random"
     let method: HTTPMethod = .get
     var requiresAuth: Bool { false }

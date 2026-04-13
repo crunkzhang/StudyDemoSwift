@@ -4,11 +4,11 @@ public final class APIClient {
     private let net: NetSendable
 
     public init(
-        env: APIEnv,
+        hostResolver: HostResolving = DefaultHostResolver(),
         tokenProvider: @escaping () -> String? = { nil }
     ) {
         let config = NetConfig(
-            baseURL: env.baseURL,
+            hostResolver: hostResolver,
             defaultHeaders: [
                 "Accept": "application/json",
                 "Content-Type": "application/json",

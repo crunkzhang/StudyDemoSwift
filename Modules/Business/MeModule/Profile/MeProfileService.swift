@@ -7,11 +7,7 @@ struct MeProfileHeaderData {
 }
 
 final class MeProfileService {
-    private let api: APIClient
-
-    init(api: APIClient) {
-        self.api = api
-    }
+    private let api = APIClient()
 
     func fetchHeaderData() async -> MeProfileHeaderData {
         do {

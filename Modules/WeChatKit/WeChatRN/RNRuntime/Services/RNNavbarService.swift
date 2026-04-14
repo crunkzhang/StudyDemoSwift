@@ -1,30 +1,40 @@
 import UIKit
 
-private enum NavbarBridgeSignals {
-    static let rightItemPress = "navbarBridge:rightItemPress"
-}
-
-final class NavbarBridgeHandler {
-    static let shared = NavbarBridgeHandler()
+/// RN 导航栏能力：监听当前 VC 变化，应用/还原导航栏外观与右侧按钮，并在点击时派发事件。
+final class RNNavbarService {
+    static let shared = RNNavbarService()
 
     private var pendingOptions: NavbarOptions?
     private var rightActionId: String?
+    private weak var trackedVC: UIViewController?
 
-    private init() {}
-
-    func setCurrentViewController(_ viewController: UIViewController) {
-        RNBridgeContext.shared.currentViewController = viewController
-        if let pendingOptions {
-            apply(options: pendingOptions)
-            self.pendingOptions = nil
+    private init() {
+        RNContext.shared.observeCurrentVC { [weak self] vc in
+            self?.handleCurrentVCChange(vc)
         }
     }
 
     func apply(options: NavbarOptions) {
-        guard let viewController = RNBridgeContext.shared.currentViewController else {
+        guard let viewController = RNContext.shared.currentViewController else {
             pendingOptions = options
             return
         }
+        applyInternal(options: options, to: viewController)
+    }
+
+    private func handleCurrentVCChange(_ newVC: UIViewController?) {
+        if let tracked = trackedVC, tracked !== newVC {
+            restoreAppearance(on: tracked)
+            trackedVC = nil
+            rightActionId = nil
+        }
+        if let newVC, let pending = pendingOptions {
+            pendingOptions = nil
+            applyInternal(options: pending, to: newVC)
+        }
+    }
+
+    private func applyInternal(options: NavbarOptions, to viewController: UIViewController) {
         guard let navigationController = viewController.navigationController else { return }
 
         switch options.mode {
@@ -40,32 +50,16 @@ final class NavbarBridgeHandler {
             viewController.navigationItem.rightBarButtonItem = nil
             rightActionId = nil
         }
+        trackedVC = viewController
     }
 
-    func restoreNativeNavigationIfNeeded(for viewController: UIViewController) {
-        guard viewController === RNBridgeContext.shared.currentViewController else { return }
+    private func restoreAppearance(on viewController: UIViewController) {
         guard let navigationController = viewController.navigationController else { return }
 
         navigationController.setNavigationBarHidden(false, animated: false)
         navigationController.navigationBar.prefersLargeTitles = false
         resetAppearance(for: navigationController)
         viewController.navigationItem.rightBarButtonItem = nil
-        RNBridgeContext.shared.currentViewController = nil
-        rightActionId = nil
-    }
-
-    func goBack(animated: Bool) {
-        guard let viewController = RNBridgeContext.shared.currentViewController else { return }
-
-        if let navigationController = viewController.navigationController,
-           navigationController.viewControllers.count > 1 {
-            navigationController.popViewController(animated: animated)
-            return
-        }
-
-        if viewController.presentingViewController != nil {
-            viewController.dismiss(animated: animated)
-        }
     }
 
     private func applyRightItem(_ item: NavbarRightItem?, to viewController: UIViewController) {
@@ -142,10 +136,7 @@ final class NavbarBridgeHandler {
     @objc
     private func handleRightItemTap() {
         guard let actionId = rightActionId else { return }
-        RNBridgeContext.shared.emit(
-            signal: NavbarBridgeSignals.rightItemPress,
-            payload: ["actionId": actionId]
-        )
+        EventBus.emit(NavbarEvents.rightItemPress, payload: ["actionId": actionId])
     }
 }
 

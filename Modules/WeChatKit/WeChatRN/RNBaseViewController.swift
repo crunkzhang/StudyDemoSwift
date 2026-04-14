@@ -44,19 +44,20 @@ open class RNBaseViewController: BaseViewController {
 
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        NavbarBridgeHandler.shared.setCurrentViewController(self)
+        RNContext.shared.setCurrentViewController(self)
     }
 
     open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        NavbarBridgeHandler.shared.setCurrentViewController(self)
+        RNContext.shared.setCurrentViewController(self)
     }
 
     open override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
-        if isMovingFromParent || isBeingDismissed {
-            NavbarBridgeHandler.shared.restoreNativeNavigationIfNeeded(for: self)
+        if isMovingFromParent || isBeingDismissed,
+           RNContext.shared.currentViewController === self {
+            RNContext.shared.setCurrentViewController(nil)
         }
     }
 }

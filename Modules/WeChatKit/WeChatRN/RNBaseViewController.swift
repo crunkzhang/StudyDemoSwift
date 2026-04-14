@@ -4,12 +4,15 @@ import WeChatUI
 import WeChatRouter
 
 open class RNBaseViewController: BaseViewController {
-    private let moduleName: String
-    private let props: [String: Any]
+    public static let rootModuleName = "WeChatRN"
+    public static let pageQueryKey = "page"
 
-    public init(moduleName: String, props: [String: Any] = [:]) {
-        self.moduleName = moduleName
-        self.props = props
+    private let pageName: String
+    private let params: [String: Any]
+
+    public init(pageName: String, params: [String: Any] = [:]) {
+        self.pageName = pageName
+        self.params = params
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -24,9 +27,13 @@ open class RNBaseViewController: BaseViewController {
             return
         }
 
+        let initialProps: [String: Any] = [
+            "pageName": pageName,
+            "params": params,
+        ]
         let rnView = factory.rootViewFactory.view(
-            withModuleName: moduleName,
-            initialProperties: props
+            withModuleName: Self.rootModuleName,
+            initialProperties: initialProps
         )
         view.addSubview(rnView)
 
@@ -60,7 +67,9 @@ extension RNBaseViewController: PageRoutable {
     public static let routePattern = "rn"
 
     public static func createPage(with params: [String: String]) -> UIViewController? {
-        guard let moduleName = params["module"] else { return nil }
-        return RNBaseViewController(moduleName: moduleName, props: params)
+        guard let pageName = params[pageQueryKey], !pageName.isEmpty else { return nil }
+        var rest = params
+        rest.removeValue(forKey: pageQueryKey)
+        return RNBaseViewController(pageName: pageName, params: rest)
     }
 }

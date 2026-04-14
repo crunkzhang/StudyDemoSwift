@@ -91,6 +91,7 @@ targets:
     dependencies:
       - target: WeChatUI
       - target: WeChatRouter
+      - target: NavigateKit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRN
       GENERATE_INFOPLIST_FILE: YES

@@ -52,7 +52,7 @@ extension ChatViewController: UITableViewDelegate {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let chat = conversations[indexPath.row]
-        let jumplink = "\(Routes.rn)?module=ChatDetail&chatId=\(chat.id)&contactName=\(chat.contactName)"
+        let jumplink = "\(Routes.chatDetail)&chatId=\(chat.id)&contactName=\(chat.contactName)"
         Router.shared.push(jumplink)
     }
 }

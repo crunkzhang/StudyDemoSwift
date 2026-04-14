@@ -11,4 +11,12 @@ public enum Routes {
     public static let game          = "wechat://rn?page=gameCenter"
     public static let settings      = "wechat://rn?page=settings"
     public static let debugHome     = "wechat://rn?page=debugHome"
+
+    public static let contactNewFriends       = "wechat://rn?page=contactNewFriends"
+    public static let contactGroups           = "wechat://rn?page=contactGroups"
+    public static let contactTags             = "wechat://rn?page=contactTags"
+    public static let contactOfficialAccounts = "wechat://rn?page=contactOfficialAccounts"
+    public static let contactSearch           = "wechat://rn?page=contactSearch"
+
+    public static let contactDetail           = "wechat://contact/detail"
 }

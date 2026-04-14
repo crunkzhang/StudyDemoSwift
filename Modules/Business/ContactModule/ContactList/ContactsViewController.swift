@@ -2,6 +2,7 @@ import UIKit
 import WeChatUI
 import SnapKit
 import ExtensionKit
+import WeChatRouter
 
 public class ContactsViewController: BaseViewController {
     fileprivate struct TopItem {
@@ -9,6 +10,7 @@ public class ContactsViewController: BaseViewController {
         let iconTint: UIColor
         let iconBackground: UIColor
         let title: String
+        let route: String
     }
 
     private var sections: [String] = []
@@ -16,10 +18,10 @@ public class ContactsViewController: BaseViewController {
 
     // 顶部功能入口
     private let topItems: [TopItem] = [
-        TopItem(icon: "person.badge.plus.fill", iconTint: .white, iconBackground: UIColor(hex: "#F39B38"), title: "新的朋友"),
-        TopItem(icon: "person.2.fill", iconTint: .white, iconBackground: UIColor(hex: "#4D7CFE"), title: "群聊"),
-        TopItem(icon: "tag.fill", iconTint: .white, iconBackground: UIColor(hex: "#15B56B"), title: "标签"),
-        TopItem(icon: "building.2.fill", iconTint: .white, iconBackground: UIColor(hex: "#5D6B86"), title: "公众号"),
+        TopItem(icon: "person.badge.plus.fill", iconTint: .white, iconBackground: UIColor(hex: "#F39B38"), title: "新的朋友", route: Routes.contactNewFriends),
+        TopItem(icon: "person.2.fill", iconTint: .white, iconBackground: UIColor(hex: "#4D7CFE"), title: "群聊", route: Routes.contactGroups),
+        TopItem(icon: "tag.fill", iconTint: .white, iconBackground: UIColor(hex: "#15B56B"), title: "标签", route: Routes.contactTags),
+        TopItem(icon: "building.2.fill", iconTint: .white, iconBackground: UIColor(hex: "#5D6B86"), title: "公众号", route: Routes.contactOfficialAccounts),
     ]
 
     private lazy var tableView: UITableView = {
@@ -58,14 +60,19 @@ public class ContactsViewController: BaseViewController {
         }
     }
 
+    @objc private func openSearch() {
+        Router.shared.push(Routes.contactSearch)
+    }
+
     private func createTableHeader() -> UIView {
         let header = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 92))
         header.backgroundColor = .clear
 
-        let searchBar = UIView()
+        let searchBar = UIControl()
         searchBar.backgroundColor = .white
         searchBar.layer.cornerRadius = 18
         searchBar.layer.cornerCurve = .continuous
+        searchBar.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
 
         let searchIcon = UIImageView(image: UIImage(systemName: "magnifyingglass"))
         searchIcon.tintColor = UIColor(hex: "#8B929D")
@@ -163,6 +170,14 @@ extension ContactsViewController: UITableViewDataSource {
 extension ContactsViewController: UITableViewDelegate {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        if indexPath.section == 0 {
+            Router.shared.push(topItems[indexPath.row].route)
+            return
+        }
+        let key = sections[indexPath.section - 1]
+        if let contact = grouped[key]?[indexPath.row] {
+            Router.shared.push("\(Routes.contactDetail)?id=\(contact.id)")
+        }
     }
 
     public func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {

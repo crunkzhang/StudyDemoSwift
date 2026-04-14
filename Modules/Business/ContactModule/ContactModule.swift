@@ -3,10 +3,13 @@ import WeChatRouter
 
 extension ContactModule: ModuleRoutable {
     public static func registerRoutes() {
-        // 通讯录相关路由注册
-        // 未来可以添加：
-        // Router.register("wechat://contact/detail") { ... }
-        // Router.register("wechat://contact/add") { ... }
+        Router.shared.register("contact/detail") { params in
+            let data = MockContactData.generate()
+            let all = data.grouped.values.flatMap { $0 }
+            let id = params["id"] ?? ""
+            let contact = all.first { $0.id == id } ?? all.first!
+            return ContactDetailViewController(contact: contact)
+        }
     }
 }
 

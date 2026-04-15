@@ -38,22 +38,33 @@ final class NetBridge: NSObject {
         let queryItems = query.map { URLQueryItem(name: $0.key, value: stringify($0.value)) }
         let body: Encodable? = bodyAny.map { JSONValue.from($0) }
 
-        let endpoint = DynamicEndpoint(
-            service: domain,
-            path: path,
-            method: httpMethod,
-            headers: headers,
-            queryItems: queryItems,
-            body: body,
-            requiresAuth: true
-        )
+        let service = APIService(rawValue: domain)
+        let requiresAuth = (params["auth"] as? Bool)
+            ?? service?.defaultRequiresAuth
+            ?? true
+        let raw = service.map { !$0.usesAPIRespEnvelope } ?? false
 
         let task = Task { [weak self] in
             defer {
                 if let requestId = requestId { self?.removeTask(requestId) }
             }
             do {
-                let value: JSONValue = try await Self.client.send(endpoint)
+                let value: JSONValue
+                if raw {
+                    let endpoint = RawDynamicEndpoint(
+                        service: domain, path: path, method: httpMethod,
+                        headers: headers, queryItems: queryItems,
+                        body: body, requiresAuth: requiresAuth
+                    )
+                    value = try await Self.client.sendRaw(endpoint)
+                } else {
+                    let endpoint = DynamicEndpoint(
+                        service: domain, path: path, method: httpMethod,
+                        headers: headers, queryItems: queryItems,
+                        body: body, requiresAuth: requiresAuth
+                    )
+                    value = try await Self.client.send(endpoint)
+                }
                 resolve(value.anyValue)
             } catch is CancellationError {
                 reject(BridgeError.cancelled.rawValue, "Request cancelled", nil)

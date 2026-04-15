@@ -8,6 +8,23 @@ public enum APIService: String {
     /// dog.ceo 占位服务，仅用于当前示例
     case petMock
 
+    /// 该域默认是否需要鉴权。RN 侧 HttpConfig.auth 未显式指定时使用该默认值。
+    public var defaultRequiresAuth: Bool {
+        switch self {
+        case .common, .user, .discover: return true
+        case .petMock:                  return false
+        }
+    }
+
+    /// 该域响应是否使用统一 APIResp<T> 外壳（code/msg/data）。
+    /// 第三方/mock 接口（如 dog.ceo）返回非标准结构，置 false，走 sendRaw 原样透传。
+    public var usesAPIRespEnvelope: Bool {
+        switch self {
+        case .common, .user, .discover: return true
+        case .petMock:                  return false
+        }
+    }
+
     public func host(for env: APIEnv) -> URL {
         switch self {
         case .common:

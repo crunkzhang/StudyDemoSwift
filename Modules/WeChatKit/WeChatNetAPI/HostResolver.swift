@@ -7,7 +7,9 @@ public struct DefaultHostResolver: HostResolving {
     public init() {}
 
     public func baseURL(for service: String) -> URL {
-        let svc = APIService(rawValue: service) ?? .common
+        guard let svc = APIService(rawValue: service) else {
+            fatalError("Unknown APIService: \"\(service)\" — RN NetDomain 与 iOS APIService 两端枚举不同步")
+        }
         return svc.host(for: AppEnvironment.current)
     }
 }

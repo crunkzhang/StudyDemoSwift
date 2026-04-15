@@ -89,6 +89,7 @@ targets:
     sources:
       - Modules/WeChatKit/WeChatRN
     dependencies:
+      - target: WeChatNetAPI
       - target: WeChatUI
       - target: WeChatRouter
       - target: NavigateKit

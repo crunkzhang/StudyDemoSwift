@@ -37,6 +37,7 @@ target 'WeChatUI' do
     pod 'react-native-safe-area-context', :path => '../WeChatRN/node_modules/react-native-safe-area-context'
     pod 'RNScreens', :path => '../WeChatRN/node_modules/react-native-screens'
     pod 'react-native-webview', :path => '../WeChatRN/node_modules/react-native-webview'
+    pod 'RNSVG', :path => '../WeChatRN/node_modules/react-native-svg'
   end
 
   # ========== Feature 层 ==========

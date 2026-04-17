@@ -33,7 +33,13 @@ private class RNAppDelegate: RCTDefaultReactNativeFactoryDelegate {
         RCTBundleURLProvider.sharedSettings().jsLocation = "172.27.90.56"
         return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
     #else
-        Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+        if let downloaded = RNBundleUpdater.shared.downloadedBundlePath {
+            print("[RNBundle] 加载远程已下载 bundle: \(downloaded.path)")
+            return downloaded
+        }
+        let builtin = Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+        print("[RNBundle] 加载内置兜底 bundle")
+        return builtin
     #endif
     }
 }

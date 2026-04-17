@@ -13,6 +13,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         RNFactoryManager.shared.setup()
+        RNBundleUpdater.shared.remoteBaseURL = "https://cz-rn-bundle.oss-cn-hangzhou.aliyuncs.com/ios/v1"
+        RNBundleUpdater.shared.checkUpdate()
 
         RNBaseViewController.registerPageRoute()
         ChatModule.registerRoutes()

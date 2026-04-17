@@ -94,8 +94,8 @@ oss://cz-rn-bundle/
    │          │          │          │
    ▼          ▼          ▼          ▼
 ┌──────────┐┌──────────┐┌──────────┐┌──────────────┐
-│  Config  ││ Strategy ││ Download ││   Monitor    │
-│  Fetcher ││ Resolver ││ Manager  ││   Reporter   │
+│  Config  ││ Version  ││  Down-   ││   Monitor    │
+│  Fetcher ││ Resolver ││  loader  ││   Reporter   │
 └──────────┘└──────────┘└──────────┘└──────────────┘
 ```
 
@@ -105,8 +105,8 @@ oss://cz-rn-bundle/
 |------|------|------|
 | `RNBundleManager` | `RNBundleManager.swift` | 对外唯一入口，协调所有模块，管理更新触发时机（启动/前台/轮询），防并发去重 |
 | `BundleConfigFetcher` | `BundleConfigFetcher.swift` | 拉取 `update-config.json`，解析为 Swift 模型 |
-| `BundleStrategyResolver` | `BundleStrategyResolver.swift` | 输入配置 + 设备信息（deviceId/appVersion），输出"该更新到哪个版本"或"不更新" |
-| `BundleDownloadManager` | `BundleDownloadManager.swift` | 下载 bundle 到临时文件，MD5 校验，原子性写入 Documents |
+| `BundleVersionResolver` | `BundleVersionResolver.swift` | 输入配置 + 设备信息（deviceId/appVersion），输出"该更新到哪个版本"或"不更新" |
+| `BundleDownloader` | `BundleDownloader.swift` | 下载 bundle 到临时文件，MD5 校验，原子性写入 Documents |
 | `BundleMetadata` | `BundleMetadata.swift` | metadata.json 的读写，本地版本状态管理 |
 | `BundleMonitorReporter` | `BundleMonitorReporter.swift` | 事件定义、Reporter 协议、ConsoleBundleReporter 默认实现 |
 | `BundleModels` | `BundleModels.swift` | UpdateConfig / BundleInfo / GrayscaleConfig 等 Codable 数据模型 |
@@ -292,8 +292,8 @@ Modules/WeChatKit/WeChatRN/
 ├── RNBundleUpdate/
 │   ├── RNBundleManager.swift
 │   ├── BundleConfigFetcher.swift
-│   ├── BundleStrategyResolver.swift
-│   ├── BundleDownloadManager.swift
+│   ├── BundleVersionResolver.swift
+│   ├── BundleDownloader.swift
 │   ├── BundleMetadata.swift
 │   ├── BundleMonitorReporter.swift
 │   └── BundleModels.swift

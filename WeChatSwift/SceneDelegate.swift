@@ -1,4 +1,5 @@
 import UIKit
+import WeChatRN
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -14,5 +15,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = MainTabBarController()
         window.makeKeyAndVisible()
         self.window = window
+    }
+
+    func sceneWillEnterForeground(_ scene: UIScene) {
+        RNBundleManager.shared.checkUpdate()
     }
 }

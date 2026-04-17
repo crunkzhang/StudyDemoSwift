@@ -206,7 +206,19 @@ targets:
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatSwift
+      PRODUCT_BUNDLE_IDENTIFIER: com.study.wcSwift
       SWIFT_VERSION: "5.0"
       TARGETED_DEVICE_FAMILY: "1"
       INFOPLIST_FILE: WeChatSwift/Info.plist
+      CODE_SIGN_STYLE: Automatic
+      DEVELOPMENT_TEAM: 2DAFKPU228
+
+schemes:
+  WeChatSwift:
+    build:
+      targets:
+        WeChatSwift: all
+    run:
+      config: Debug
+    archive:
+      config: Release

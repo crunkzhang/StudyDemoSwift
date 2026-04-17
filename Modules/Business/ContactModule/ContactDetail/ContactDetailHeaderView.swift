@@ -3,31 +3,60 @@ import SnapKit
 import ExtensionKit
 
 final class ContactDetailHeaderView: UIView {
-    let avatarView = UIImageView()
-    let nameLabel = UILabel()
-    let remarkLabel = UILabel()
-    let wxidLabel = UILabel()
-    let regionLabel = UILabel()
+    private lazy var avatarView: UIImageView = {
+        let v = UIImageView()
+        v.layer.cornerRadius = 6
+        v.layer.masksToBounds = true
+        v.backgroundColor = UIColor(hex: "#07C160")
+        v.layer.borderWidth = 1.0 / UIScreen.main.scale
+        v.layer.borderColor = UIColor.black.withAlphaComponent(0.04).cgColor
+        return v
+    }()
+
+    private lazy var nameLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 20, weight: .semibold)
+        l.textColor = UIColor(hex: "#191919")
+        return l
+    }()
+
+    private lazy var remarkLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 15)
+        l.textColor = UIColor(hex: "#888888")
+        return l
+    }()
+
+    private lazy var wxidLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 13)
+        l.textColor = UIColor(hex: "#888888")
+        return l
+    }()
+
+    private lazy var regionLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 13)
+        l.textColor = UIColor(hex: "#888888")
+        return l
+    }()
+
+    private lazy var separator: UIView = {
+        let v = UIView()
+        v.backgroundColor = UIColor(hex: "#E5E5E5")
+        return v
+    }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .white
-        avatarView.layer.cornerRadius = 6
-        avatarView.layer.masksToBounds = true
-        avatarView.backgroundColor = UIColor(hex: "#07C160")
-        avatarView.layer.borderWidth = 1.0 / UIScreen.main.scale
-        avatarView.layer.borderColor = UIColor.black.withAlphaComponent(0.04).cgColor
+        setupSubviews()
+    }
 
-        nameLabel.font = .systemFont(ofSize: 20, weight: .semibold)
-        nameLabel.textColor = UIColor(hex: "#191919")
-        remarkLabel.font = .systemFont(ofSize: 15)
-        remarkLabel.textColor = UIColor(hex: "#888888")
-        wxidLabel.font = .systemFont(ofSize: 13)
-        wxidLabel.textColor = UIColor(hex: "#888888")
-        regionLabel.font = .systemFont(ofSize: 13)
-        regionLabel.textColor = UIColor(hex: "#888888")
+    required init?(coder: NSCoder) { fatalError() }
 
-        [avatarView, nameLabel, remarkLabel, wxidLabel, regionLabel].forEach { addSubview($0) }
+    private func setupSubviews() {
+        [avatarView, nameLabel, remarkLabel, wxidLabel, regionLabel, separator].forEach { addSubview($0) }
 
         avatarView.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(16)
@@ -53,17 +82,11 @@ final class ContactDetailHeaderView: UIView {
             $0.leading.equalTo(wxidLabel.snp.trailing).offset(10)
             $0.centerY.equalTo(wxidLabel)
         }
-
-        let separator = UIView()
-        separator.backgroundColor = UIColor(hex: "#E5E5E5")
-        addSubview(separator)
         separator.snp.makeConstraints {
             $0.leading.trailing.bottom.equalToSuperview()
             $0.height.equalTo(1.0 / UIScreen.main.scale)
         }
     }
-
-    required init?(coder: NSCoder) { fatalError() }
 
     func configure(name: String, remark: String?, wxid: String, region: String?) {
         nameLabel.text = name

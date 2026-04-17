@@ -47,11 +47,18 @@ class MainTabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "person.crop.circle.fill")
         )
 
+        let wrap: (UIViewController) -> UINavigationController = { rootVC in
+            if #available(iOS 26, *), ProcessInfo().operatingSystemVersion.minorVersion < 2 {
+                return LayoutForcingNavigationController(rootViewController: rootVC)
+            }
+            return UINavigationController(rootViewController: rootVC)
+        }
+
         viewControllers = [
-            UINavigationController(rootViewController: chat),
-            UINavigationController(rootViewController: contacts),
-            UINavigationController(rootViewController: discover),
-            UINavigationController(rootViewController: me)
+            wrap(chat),
+            wrap(contacts),
+            wrap(discover),
+            wrap(me)
         ]
     }
 }

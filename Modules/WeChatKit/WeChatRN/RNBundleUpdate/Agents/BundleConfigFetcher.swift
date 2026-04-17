@@ -15,7 +15,10 @@ extension BundleConfigFetcher {
             return
         }
 
-        URLSession.shared.dataTask(with: url) { data, _, error in
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+
+        URLSession.shared.dataTask(with: request) { data, _, error in
             if let error {
                 completion(.failure(.networkError(error)))
                 return

@@ -1,12 +1,14 @@
-import Foundation
+import UIKit
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
+import WeChatUI
 
 /// RN Factory 管理器 —— RN 启动的唯一入口
 public class RNFactoryManager {
     public static let shared = RNFactoryManager()
     public private(set) var factory: RCTReactNativeFactory?
+    private var needsReload = false
 
     private var delegate: RNAppDelegate?
 
@@ -14,10 +16,74 @@ public class RNFactoryManager {
 
     /// 初始化 React Native，由主工程 AppDelegate 调用一次
     public func setup() {
+        guard factory == nil else { return }
+
         let appDelegate = RNAppDelegate()
         appDelegate.dependencyProvider = RCTAppDependencyProvider()
         delegate = appDelegate
         factory = RCTReactNativeFactory(delegate: appDelegate)
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleBundleUpdate),
+            name: .rnBundleDidUpdate,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleVCDidAppear(_:)),
+            name: .baseVCDidAppear,
+            object: nil
+        )
+    }
+}
+
+// MARK: - Private
+
+private extension RNFactoryManager {
+    @objc func handleBundleUpdate() {
+        needsReload = true
+        reloadIfNeeded()
+    }
+
+    @objc func handleVCDidAppear(_ notification: Notification) {
+        reloadIfNeeded()
+    }
+
+    func reloadIfNeeded() {
+        guard needsReload else { return }
+        guard !hasRNPageInStack() else { return }
+        guard let delegate else { return }
+
+        factory = RCTReactNativeFactory(delegate: delegate)
+        needsReload = false
+        print("[RNBundle][Load] Bridge 已重建，加载新 bundle")
+    }
+
+    func hasRNPageInStack() -> Bool {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first,
+              let root = window.rootViewController else {
+            return false
+        }
+        return collectNavigationControllers(from: root)
+            .flatMap { $0.viewControllers }
+            .contains { $0 is RNBaseViewController }
+    }
+
+    func collectNavigationControllers(from vc: UIViewController) -> [UINavigationController] {
+        var result: [UINavigationController] = []
+        if let nav = vc as? UINavigationController {
+            result.append(nav)
+        } else if let tab = vc as? UITabBarController {
+            for child in tab.viewControllers ?? [] {
+                result.append(contentsOf: collectNavigationControllers(from: child))
+            }
+        }
+        if let presented = vc.presentedViewController {
+            result.append(contentsOf: collectNavigationControllers(from: presented))
+        }
+        return result
     }
 }
 

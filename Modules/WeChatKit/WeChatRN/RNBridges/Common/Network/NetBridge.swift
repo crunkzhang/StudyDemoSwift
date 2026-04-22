@@ -17,8 +17,8 @@ final class NetBridge: NSObject {
     /// { method, domain, path, query?, body?, headers?, timeout?, requestId? }
     @objc func request(
         _ params: NSDictionary,
-        resolver resolve: @escaping RCTPromiseResolveBlock,
-        rejecter reject: @escaping RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
     ) {
         guard
             let method = (params["method"] as? String)?.uppercased(),

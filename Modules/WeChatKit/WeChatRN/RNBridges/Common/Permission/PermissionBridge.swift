@@ -10,7 +10,7 @@ final class PermissionBridge: NSObject {
 
     @objc func requestCameraPermission(
         _ resolve: @escaping RCTPromiseResolveBlock,
-        rejecter reject: @escaping RCTPromiseRejectBlock
+        reject: @escaping RCTPromiseRejectBlock
     ) {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized: resolve("granted")
@@ -26,7 +26,7 @@ final class PermissionBridge: NSObject {
 
     @objc func requestAlbumPermission(
         _ resolve: @escaping RCTPromiseResolveBlock,
-        rejecter reject: @escaping RCTPromiseRejectBlock
+        reject: @escaping RCTPromiseRejectBlock
     ) {
         let map: (PHAuthorizationStatus) -> String = { status in
             switch status {

@@ -13,8 +13,8 @@ final class ScanBridge: NSObject {
 
     @objc func openAlbum(
         _ payload: NSDictionary,
-        resolver resolve: @escaping RCTPromiseResolveBlock,
-        rejecter reject: @escaping RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
     ) {
         let params = payload as? [String: Any] ?? [:]
         DispatchQueue.main.async {

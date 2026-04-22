@@ -1,7 +1,2 @@
-#import <React/RCTBridgeModule.h>
-
-@interface RCT_EXTERN_MODULE(ToastBridge, NSObject)
-
-RCT_EXTERN_METHOD(show:(NSDictionary *)payload)
-
-@end
+#import "../../WeChatRNTurboModule.h"
+WECHAT_RN_TURBO_MODULE(ToastBridge)

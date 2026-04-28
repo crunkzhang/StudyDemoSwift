@@ -5,179 +5,12 @@ options:
     iOS: "15.1"
   developmentLanguage: zh-Hans
 
-# 文件分组配置 - 在 Xcode 中按层次显示
-fileGroups:
-  - Foundation
-  - Modules/WeChatKit
-  - Modules/Business
-  - WeChatSwift
-
 targets:
-  ExtensionKit:
-    type: framework
-    platform: iOS
-    sources:
-      - path: Foundation/ExtensionKit/UIKit
-        group: Foundation/ExtensionKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.ExtensionKit
-      GENERATE_INFOPLIST_FILE: YES
-
-  NavigateKit:
-    type: framework
-    platform: iOS
-    sources:
-      - path: Foundation/NavigateKit/Core
-        group: Foundation/NavigateKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.NavigateKit
-      GENERATE_INFOPLIST_FILE: YES
-
-  DDNetwork:
-    type: framework
-    platform: iOS
-    sources:
-      - path: Foundation/DDNetwork/Core
-        group: Foundation/DDNetwork
-      - path: Foundation/DDNetwork/Models
-        group: Foundation/DDNetwork
-      - path: Foundation/DDNetwork/Interceptors
-        group: Foundation/DDNetwork
-      - path: Foundation/DDNetwork/Build
-        group: Foundation/DDNetwork
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.DDNetwork
-      GENERATE_INFOPLIST_FILE: YES
-
-  # ========== 项目基础组件层（微信特有）==========
-  WeChatUI:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/WeChatKit/WeChatUI
-    dependencies:
-      - target: ExtensionKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatUI
-      GENERATE_INFOPLIST_FILE: YES
-
-  WeChatRouter:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/WeChatKit/WeChatRouter
-    dependencies:
-      - target: NavigateKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRouter
-      GENERATE_INFOPLIST_FILE: YES
-
-  WeChatNetAPI:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/WeChatKit/WeChatNetAPI
-    dependencies:
-      - target: DDNetwork
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatNetAPI
-      GENERATE_INFOPLIST_FILE: YES
-
-  WeChatRN:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/WeChatKit/WeChatRN
-    dependencies:
-      - target: WeChatNetAPI
-      - target: WeChatUI
-      - target: WeChatRouter
-      - target: NavigateKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.WeChatRN
-      GENERATE_INFOPLIST_FILE: YES
-
-  # ========== 业务模块层 ==========
-  ChatModule:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/Business/ChatModule
-    dependencies:
-      - target: WeChatUI
-      - target: WeChatRouter
-      - target: WeChatRN
-      - target: ExtensionKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.ChatModule
-      GENERATE_INFOPLIST_FILE: YES
-
-  ContactModule:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/Business/ContactModule
-    dependencies:
-      - target: WeChatUI
-      - target: WeChatRouter
-      - target: ExtensionKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.ContactModule
-      GENERATE_INFOPLIST_FILE: YES
-
-  DiscoverModule:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/Business/DiscoverModule
-    dependencies:
-      - target: WeChatUI
-      - target: WeChatRouter
-      - target: WeChatRN
-      - target: ExtensionKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.DiscoverModule
-      GENERATE_INFOPLIST_FILE: YES
-
-  MeModule:
-    type: framework
-    platform: iOS
-    sources:
-      - Modules/Business/MeModule
-    dependencies:
-      - target: WeChatUI
-      - target: WeChatRouter
-      - target: WeChatNetAPI
-      - target: ExtensionKit
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.MeModule
-      GENERATE_INFOPLIST_FILE: YES
-
-  # ========== 主工程 ==========
   WeChatSwift:
     type: application
     platform: iOS
     sources:
       - WeChatSwift
-    dependencies:
-      - target: ChatModule
-      - target: ContactModule
-      - target: DiscoverModule
-      - target: MeModule
-      - target: DDNetwork
-        embed: true
-      - target: NavigateKit
-        embed: true
-      - target: ExtensionKit
-        embed: true
-      - target: WeChatNetAPI
-        embed: true
-      - target: WeChatRN
-        embed: true
-      - target: WeChatRouter
-        embed: true
-      - target: WeChatUI
-        embed: true
     info:
       path: WeChatSwift/Info.plist
       properties:
@@ -206,12 +39,16 @@ targets:
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.study.wcSwift
-      SWIFT_VERSION: "5.0"
-      TARGETED_DEVICE_FAMILY: "1"
-      INFOPLIST_FILE: WeChatSwift/Info.plist
-      CODE_SIGN_STYLE: Automatic
-      DEVELOPMENT_TEAM: 2DAFKPU228
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.study.wcSwift
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_FILE: WeChatSwift/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 2DAFKPU228
+      configs:
+        Debug:
+          ENABLE_DEBUG_DYLIB: "NO"
 
 schemes:
   WeChatSwift:

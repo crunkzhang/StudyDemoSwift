@@ -2,7 +2,7 @@
 
 ## 目标
 
-将 AppDelegate 中 11 个 SDK 的串行初始化改为基于 DAG（有向无环图）的并行调度，支持三种触发时机（立即 / 首屏后 / 业务事件），压缩启动耗时。
+将 AppDelegate 中 11 个 SDK 的串行初始化改为基于 DAG（有向无环图）的并行调度，支持四种触发时机、失败策略与超时机制，采用回调式调度避免线程池耗尽，压缩启动耗时。
 
 ## 架构
 
@@ -12,18 +12,25 @@
 │  scheduler.registerAll() + scheduler.start()│
 ├─────────────────────────────────────────────┤
 │  LaunchScheduler（核心调度器）                 │
-│  - 任务注册（name / deps / trigger / block）  │
+│  - 任务注册（TaskName / deps / trigger /      │
+│    timeout / failurePolicy / block）         │
 │  - DAG 环检测（DFS）                          │
-│  - 三种触发时机调度                             │
-│  - GCD 并发队列 + DispatchGroup 依赖等待       │
+│  - 统一派发条件：activated && inDegree==0      │
+│  - 回调式调度（入度递减 → 归零派发）              │
+│  - 失败策略（strict 级联 / tolerant 容错）      │
+│  - 超时监控（DispatchWorkItem 定时器）          │
+│  - GCD 并发队列执行，NSLock 保护状态             │
 │  - 与 LaunchMetrics 自动集成                   │
 ├─────────────────────────────────────────────┤
 │  触发层                                       │
-│  - start() → immediate 任务                   │
+│  - start() → syncAtStart（同步等待）            │
+│           → asyncAtStart（异步不阻塞）          │
 │  - RunLoop beforeWaiting → afterFirstFrame    │
 │  - fire("event") → onEvent 任务               │
 ├─────────────────────────────────────────────┤
-│  LaunchMetrics（已有，不改动）                   │
+│  LaunchMetrics（微调）                         │
+│  - observeFirstFrame 回调中触发 afterFirstFrame│
+│  - NSLock 保护 marks 数组线程安全               │
 │  - 每个任务执行前后自动 mark                     │
 └─────────────────────────────────────────────┘
 ```
@@ -34,87 +41,194 @@
 |------|------|------|
 | `WeChatSwift/LaunchScheduler.swift` | 新建 | 调度器核心 + 任务注册（同一文件，MARK 分区） |
 | `WeChatSwift/AppDelegate.swift` | 修改 | 用 registerAll + start 替代手动串行调用 |
-| `WeChatSwift/LaunchMetrics.swift` | 不改动 | 调度器内部调用 trackSDK |
+| `WeChatSwift/LaunchMetrics.swift` | 微调 | observeFirstFrame 中触发 startAfterFirstFrame；marks 加锁 |
 | `WeChatSwift/MockSDKs.swift` | 不改动 | SDK 实现不变 |
 
 ## 数据模型
 
 ```swift
-enum TaskTrigger {
-    case immediate          // start() 时立即执行
-    case afterFirstFrame    // 首屏渲染完成后自动触发
+enum TaskName: String, Hashable {
+    case crashSDK       = "CrashSDK"
+    case deviceIDSDK    = "DeviceIDSDK"
+    case configSDK      = "ConfigSDK"
+    case analyticsSDK   = "AnalyticsSDK"
+    case pushSDK        = "PushSDK"
+    case abTestSDK      = "ABTestSDK"
+    case shareSDK       = "ShareSDK"
+    case mapSDK         = "MapSDK"
+    case adSDK          = "AdSDK"
+    case paySDK         = "PaySDK"
+    case arSDK          = "ARSDK"
+}
+
+enum TaskTrigger: Equatable {
+    case syncAtStart        // start() 同步等待完成
+    case asyncAtStart       // start() 时异步执行，不阻塞返回
+    case afterFirstFrame    // 首屏渲染完成后触发
     case onEvent(String)    // 等待指定业务事件
 }
 
-enum TaskState {
+enum FailurePolicy {
+    case strict     // 失败级联：下游也标记 failed，不执行
+    case tolerant   // 容错：下游照常跑，自行兜底
+}
+
+private enum TaskState {
     case pending
     case running
     case done
+    case failed
 }
 
-struct LaunchTask {
-    let name: String
-    let deps: [String]
+private struct LaunchTask {
+    let name: TaskName
+    let deps: [TaskName]
     let trigger: TaskTrigger
-    let block: () -> Void
+    let timeout: TimeInterval
+    let failurePolicy: FailurePolicy
+    let block: () throws -> Void
 }
 ```
 
-## 调度流程
+### TaskName 枚举的价值
 
-### 三阶段触发
+- 编译期检查拼写错误（`deps: [.deviceIDSDK]` 比 `deps: ["DeviceIDSDK"]` 安全）
+- IDE 自动补全
+- 重命名时编译器报错所有引用处
+- `rawValue` 用于 LaunchMetrics 打点输出
 
-```
-scheduler.start()
-    ↓
-筛选 trigger == .immediate 的任务
-    ↓ 拓扑调度，入度为 0 的并行 dispatch
-    ↓ 每个任务完成后检查下游入度，归零则 dispatch
-    ↓
-首屏 RunLoop beforeWaiting 触发
-    ↓
-筛选 trigger == .afterFirstFrame 的任务
-    ↓ 同样走拓扑调度（依赖可能已被 immediate 阶段完成）
-    ↓
-业务方调用 fire("enterMapPage")
-    ↓
-筛选 trigger == .onEvent("enterMapPage") 的任务
-    ↓ 检查依赖，未完成的自动先执行
-```
+## 调度模型：回调式（非阻塞）
 
-### 单任务执行流程
+### 为什么不用 DispatchGroup.wait
+
+阻塞式调度中，每个有依赖的任务占一个线程 `wait` 上游完成。任务量大时（几十个 SDK）会打满 GCD 线程池（默认 64 线程），导致线程饥饿和死锁风险。
+
+### 回调式调度原理
 
 ```
-dispatch to concurrent queue {
-    1. 等待所有依赖完成（deps 的 DispatchGroup.wait）
-    2. 标记 running
-    3. LaunchMetrics.trackSDK(name) { block() }
-    4. 标记 done，completionGroup.leave() 释放下游
+注册时：
+  - inDegree[name] = deps.count    （未完成依赖数）
+  - downstream[dep] += [name]       （反向邻接表）
+
+派发时（统一条件）：
+  - activated && inDegree == 0 && pending → dispatchTask
+  - 任务执行完毕 → onTaskFinished 回调：
+    1. 标记 done / failed
+    2. 遍历 downstream，递减下游 inDegree
+    3. 调用 dispatchReadyTasks(among: downstream) 检查就绪任务
+    4. syncAtStart 任务额外 syncGroup.leave()
+```
+
+每个任务只在真正可执行时才 dispatch 到并发队列，零线程阻塞等待。
+
+### 统一派发入口
+
+所有触发路径都收敛到同一个方法：
+
+```swift
+private func dispatchReadyTasks(among candidates: [TaskName]) {
+    // 统一条件：activated && inDegree == 0 && pending
 }
 ```
 
-### 关键约束
+| 调用方 | candidates 来源 |
+|--------|----------------|
+| `start()` | syncAtStart + asyncAtStart 任务名 |
+| `startAfterFirstFrame()` | afterFirstFrame 任务名 |
+| `fire()` | 所有已激活的任务名 |
+| `onTaskFinished()` | 下游任务名（downstream） |
 
-- 每个任务只执行一次，通过 TaskState 防止重复
-- 跨阶段依赖自动处理：afterFirstFrame 任务依赖的 immediate 任务已完成则直接执行
-- fire 触发时如果依赖链有未执行任务，递归向上触发
+这意味着 onEvent 任务也可以声明跨阶段依赖（如 `deps: [.deviceIDSDK]`），fire 时如果依赖已完成（inDegree 已归零），直接派发；如果未完成，`activateDeps` 递归激活依赖链先跑完再触发。
 
-## 并发实现
+### 核心数据结构
 
 ```swift
 final class LaunchScheduler {
     static let shared = LaunchScheduler()
 
-    private let queue = DispatchQueue(label: "launch.scheduler", attributes: .concurrent)
-    private var tasks: [String: LaunchTask] = [:]
-    private var taskState: [String: TaskState] = [:]
-    private var completionGroups: [String: DispatchGroup] = [:]
+    private let concurrentQueue = DispatchQueue(label: "launch.scheduler", attributes: .concurrent)
+    private let lock = NSLock()
+
+    private var tasks: [TaskName: LaunchTask] = [:]
+    private var state: [TaskName: TaskState] = [:]
+    private var inDegree: [TaskName: Int] = [:]            // 剩余未完成的依赖数
+    private var downstream: [TaskName: [TaskName]] = [:]   // dep → [dependents]
+    private var activated: Set<TaskName> = []               // 已激活的任务
+    private let syncGroup = DispatchGroup()                // 仅等待 syncAtStart 任务
 }
 ```
 
-- 并发队列：所有任务 dispatch 到同一个 concurrent queue
-- DispatchGroup：每个任务一个 group，注册时 enter()，完成时 leave()
-- 依赖等待：下游任务在并发队列线程上 wait 上游的 group，不阻塞其他任务
+## 失败处理
+
+### 失败策略
+
+| 策略 | 行为 | 适用场景 |
+|------|------|---------|
+| `.strict` | 依赖失败 → 下游级联标记 failed，跳过执行 | 关键链路（DeviceID → Analytics → ABTest） |
+| `.tolerant` | 依赖失败 → 下游照常执行，自行兜底 | 非核心功能（Push、Share、Ad） |
+
+### 级联失败流程
+
+```
+dispatchTask(name):
+    检查 deps 中是否有 strict 且 failed 的依赖
+    → 有：标记 failed，打印日志，走 onTaskFinished(succeeded: false)
+    → 无：正常执行
+```
+
+### 超时机制
+
+```
+dispatchTask(name):
+    1. asyncAfter(timeout) → handleTimeout → 标记 failed → onTaskFinished
+    2. concurrentQueue.async → 执行 block → 成功则 cancel 超时定时器
+    3. 如果超时先触发，block 完成后检查 alreadyFailed，避免重复回调
+```
+
+默认超时 5 秒。注册时可自定义：`timeout: 10.0`。
+
+### syncGroup 安全
+
+`onTaskFinished` 中无论成功失败都调用 `syncGroup.leave()`，确保 `start()` 的 `syncGroup.wait()` 不会死锁。
+
+## 调度流程
+
+### 四阶段触发
+
+```
+scheduler.start()
+    ↓
+激活 syncAtStart + asyncAtStart → dispatchReadyTasks
+    ↓ 回调链：完成 → 递减下游入度 → 归零派发
+    ↓ syncGroup.wait() 只等 syncAtStart
+    ↓ asyncAtStart 在后台继续，不阻塞
+    ↓
+首屏 RunLoop beforeWaiting 触发
+    ↓
+激活 afterFirstFrame → dispatchReadyTasks
+    ↓
+业务方调用 fire("enterMapPage")
+    ↓
+激活 onEvent 任务 + 递归激活依赖链 → dispatchReadyTasks
+```
+
+### 单任务执行流程
+
+```
+dispatchTask(name):
+    lock → 检查 pending → 检查 strict 依赖失败 → 标记 running → unlock
+    启动超时定时器
+    concurrentQueue.async {
+        LaunchMetrics.trackSDK(name) { try block() }
+        cancel 超时定时器
+        if !alreadyFailed → onTaskFinished(succeeded)
+    }
+
+onTaskFinished(task, succeeded):
+    lock → 标记 done/failed → 递减 downstream inDegree → unlock
+    if syncAtStart → syncGroup.leave()
+    dispatchReadyTasks(among: downstream)
+```
 
 ## 环检测
 
@@ -128,29 +242,43 @@ final class LaunchScheduler {
 同文件 extension，集中管理：
 
 ```swift
-// MARK: - Task Registration
-
 extension LaunchScheduler {
     func registerAll() {
-        // 第一梯队：immediate，无依赖
-        register("CrashSDK",    deps: [], trigger: .immediate) { CrashSDK.setup() }
-        register("DeviceIDSDK", deps: [], trigger: .immediate) { DeviceIDSDK.setup() }
-        register("ConfigSDK",   deps: [], trigger: .immediate) { ConfigSDK.setup() }
+        // 第一梯队：syncAtStart，无依赖，必须最早完成
+        register(.crashSDK,    deps: [], trigger: .syncAtStart) { CrashSDK.setup() }
+        register(.deviceIDSDK, deps: [], trigger: .syncAtStart) { DeviceIDSDK.setup() }
+        register(.configSDK,   deps: [], trigger: .syncAtStart) { ConfigSDK.setup() }
 
-        // 第二梯队：immediate，有依赖
-        register("AnalyticsSDK", deps: ["DeviceIDSDK"], trigger: .immediate) { AnalyticsSDK.setup() }
-        register("PushSDK",      deps: ["DeviceIDSDK"], trigger: .immediate) { PushSDK.setup() }
-        register("ABTestSDK",    deps: ["AnalyticsSDK", "ConfigSDK"], trigger: .immediate) { ABTestSDK.setup() }
-        register("ShareSDK",     deps: ["DeviceIDSDK"], trigger: .immediate) { ShareSDK.setup() }
+        // 第二梯队：有依赖
+        register(.analyticsSDK, deps: [.deviceIDSDK], trigger: .syncAtStart) { AnalyticsSDK.setup() }
+        register(.pushSDK,      deps: [.deviceIDSDK], trigger: .asyncAtStart, failurePolicy: .tolerant) { PushSDK.setup() }
+        register(.abTestSDK,    deps: [.analyticsSDK, .configSDK], trigger: .syncAtStart) { ABTestSDK.setup() }
+        register(.shareSDK,     deps: [.deviceIDSDK], trigger: .asyncAtStart, failurePolicy: .tolerant) { ShareSDK.setup() }
 
         // 第三梯队：延迟触发
-        register("MapSDK",  deps: [], trigger: .onEvent("enterMapPage")) { MapSDK.setup() }
-        register("AdSDK",   deps: [], trigger: .afterFirstFrame) { AdSDK.setup() }
-        register("PaySDK",  deps: [], trigger: .onEvent("enterPayPage")) { PaySDK.setup() }
-        register("ARSDK",   deps: [], trigger: .afterFirstFrame) { ARSDK.setup() }
+        register(.mapSDK, deps: [], trigger: .onEvent("enterMapPage"), failurePolicy: .tolerant) { MapSDK.setup() }
+        register(.adSDK,  deps: [], trigger: .afterFirstFrame, failurePolicy: .tolerant) { AdSDK.setup() }
+        register(.paySDK, deps: [], trigger: .onEvent("enterPayPage")) { PaySDK.setup() }
+        register(.arSDK,  deps: [], trigger: .afterFirstFrame, failurePolicy: .tolerant) { ARSDK.setup() }
     }
 }
 ```
+
+### 任务分类依据
+
+| 任务 | 触发类型 | 失败策略 | 理由 |
+|------|---------|---------|------|
+| CrashSDK | syncAtStart | strict | 崩溃监控必须最早就绪 |
+| DeviceIDSDK | syncAtStart | strict | 下游 Analytics/ABTest 依赖 |
+| ConfigSDK | syncAtStart | strict | ABTest 依赖 |
+| AnalyticsSDK | syncAtStart | strict | ABTest 依赖 |
+| ABTestSDK | syncAtStart | strict | 首屏可能需要实验配置 |
+| PushSDK | asyncAtStart | tolerant | 推送注册可后台完成 |
+| ShareSDK | asyncAtStart | tolerant | 分享不影响首屏 |
+| MapSDK | onEvent | tolerant | 进入地图页才初始化 |
+| AdSDK | afterFirstFrame | tolerant | 首屏后加载广告 |
+| PaySDK | onEvent | strict | 支付流程不能容错 |
+| ARSDK | afterFirstFrame | tolerant | 首屏后加载 AR |
 
 ## AppDelegate 集成
 
@@ -158,12 +286,19 @@ extension LaunchScheduler {
 func didFinishLaunchingWithOptions(...) -> Bool {
     LaunchMetrics.mark("didFinishStart")
 
+    // ── 原有 RN 初始化 ──
+    RNFactoryManager.shared.setup()
+    ...
+
+    // ── SDK 并行调度 ──
     LaunchScheduler.shared.registerAll()
     LaunchScheduler.shared.start()
 
-    // 路由注册...
+    // ── 路由注册 ──
+    ...
 
     LaunchMetrics.mark("didFinishEnd")
+    LaunchMetrics.observeFirstFrame()
     return true
 }
 ```
@@ -171,47 +306,61 @@ func didFinishLaunchingWithOptions(...) -> Bool {
 ## 依赖关系图
 
 ```
-immediate 阶段:
+syncAtStart 阶段（start 同步等待）:
 
 CrashSDK ──────────────────────────────── (独立)
 DeviceIDSDK ──┬── AnalyticsSDK ──┐
-              ├── PushSDK        ├── ABTestSDK
-              └── ShareSDK       │
+              │                  ├── ABTestSDK
+              │                  │
 ConfigSDK ───────────────────────┘
+
+asyncAtStart 阶段（start 异步不阻塞）:
+
+DeviceIDSDK ──┬── PushSDK   [tolerant]
+              └── ShareSDK  [tolerant]
 
 afterFirstFrame 阶段:
 
-AdSDK ──── (独立)
-ARSDK ──── (独立)
+AdSDK ──── (独立) [tolerant]
+ARSDK ──── (独立) [tolerant]
 
 onEvent 阶段:
 
-MapSDK ──── fire("enterMapPage")
-PaySDK ──── fire("enterPayPage")
+MapSDK ──── fire("enterMapPage") [tolerant]
+PaySDK ──── fire("enterPayPage") [strict]
 ```
 
 ## 性能预估
 
-### 串行（当前）
+### 串行（优化前）
 
 全部 11 个 SDK 串行：~1020-1700ms（实测 ~1511ms）
 
-### 并行后（immediate 阶段）
+### 并行后
 
-关键路径：DeviceIDSDK(50-80) → AnalyticsSDK(80-150) → ABTestSDK(100-200) ≈ 230-430ms
+**syncAtStart 关键路径**（start() 阻塞等待）：
 
-同时 ConfigSDK(60-100) 并行，ABTestSDK 等两者都完成才启动。
+DeviceIDSDK(50-80) → AnalyticsSDK(80-150) → ABTestSDK(100-200) ≈ 230-430ms
+ConfigSDK(60-100) 并行，ABTestSDK 等两者都完成才启动。
+CrashSDK 在关键路径内并行完成。
 
-CrashSDK、PushSDK、ShareSDK 在关键路径内并行完成。
+**start() 阻塞耗时预估：~300-430ms**（优化 70%+）
 
-**immediate 阶段预估：~300-430ms**（从 ~1511ms 压缩，优化 70%+）
+**asyncAtStart**（PushSDK + ShareSDK）：不阻塞 start()，在后台完成。
 
-### 延迟任务
+**afterFirstFrame + onEvent**：不占启动时间，按需触发。
 
-MapSDK / PaySDK / AdSDK / ARSDK 不占启动时间，按需触发。
+## 线程安全
+
+| 组件 | 保护机制 |
+|------|---------|
+| LaunchScheduler 共享状态 | NSLock（tasks/state/inDegree/downstream/activated） |
+| LaunchMetrics.marks 数组 | NSLock（并发 trackSDK 写入安全） |
+| LaunchMetrics.mark() 时间戳 | 锁外取值 `CFAbsoluteTimeGetCurrent()`，锁内 append（保证时间准确） |
 
 ## 与 LaunchMetrics 的衔接
 
-- 调度器在每个任务执行时自动调用 `LaunchMetrics.trackSDK(name) { block() }`
+- 调度器在每个任务执行时自动调用 `LaunchMetrics.trackSDK(name.rawValue) { try block() }`
 - 报告中 SDK Details 自动体现并行效果（各 SDK 的绝对耗时不变，但总耗时大幅下降）
-- immediate 阶段的 `start()` 需要同步等待所有 immediate 任务完成后返回，这样 `didFinishStart → didFinishEnd` 的区间仍然能准确反映 SDK 初始化总耗时
+- `start()` 同步等待 syncAtStart 完成后返回，`didFinishStart → didFinishEnd` 区间准确反映同步 SDK 初始化耗时
+- `observeFirstFrame` 回调中调用 `LaunchScheduler.shared.startAfterFirstFrame()` 触发延迟任务

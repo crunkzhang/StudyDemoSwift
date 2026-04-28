@@ -12,6 +12,7 @@ final class LaunchMetrics {
     static let shared = LaunchMetrics()
 
     private var marks: [LaunchMark] = []
+    private let lock = NSLock()
     private let startTime: CFAbsoluteTime
 
     private init() {
@@ -22,7 +23,10 @@ final class LaunchMetrics {
     // MARK: - Public API
 
     static func mark(_ name: String) {
-        shared.marks.append(LaunchMark(name: name, timestamp: CFAbsoluteTimeGetCurrent()))
+        let timestamp = CFAbsoluteTimeGetCurrent()
+        shared.lock.lock()
+        shared.marks.append(LaunchMark(name: name, timestamp: timestamp))
+        shared.lock.unlock()
     }
 
     static func trackSDK(_ name: String, block: () -> Void) {
@@ -45,6 +49,8 @@ final class LaunchMetrics {
         ) { observer, _ in
             CFRunLoopRemoveObserver(CFRunLoopGetMain(), observer, .commonModes)
             mark("firstFrame")
+            // 触发 afterFirstFrame 阶段的延迟任务
+            LaunchScheduler.shared.startAfterFirstFrame()
             report()
         }
         CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)

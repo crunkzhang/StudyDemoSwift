@@ -21,23 +21,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         )
         RNBundleManager.shared.start()
 
-        // ── Mock SDK 初始化（全串行，后续任务编排优化） ──
-        // 第一梯队：无依赖
-        LaunchMetrics.trackSDK("CrashSDK")    { CrashSDK.setup() }
-        LaunchMetrics.trackSDK("DeviceIDSDK") { DeviceIDSDK.setup() }
-        LaunchMetrics.trackSDK("ConfigSDK")   { ConfigSDK.setup() }
-
-        // 第二梯队：有依赖
-        LaunchMetrics.trackSDK("AnalyticsSDK") { AnalyticsSDK.setup() }
-        LaunchMetrics.trackSDK("PushSDK")      { PushSDK.setup() }
-        LaunchMetrics.trackSDK("ABTestSDK")    { ABTestSDK.setup() }
-        LaunchMetrics.trackSDK("ShareSDK")     { ShareSDK.setup() }
-
-        // 第三梯队：可延后（当前仍串行，演示优化空间）
-        LaunchMetrics.trackSDK("MapSDK")  { MapSDK.setup() }
-        LaunchMetrics.trackSDK("AdSDK")   { AdSDK.setup() }
-        LaunchMetrics.trackSDK("PaySDK")  { PaySDK.setup() }
-        LaunchMetrics.trackSDK("ARSDK")   { ARSDK.setup() }
+        // ── SDK 并行调度 ──
+        LaunchScheduler.shared.registerAll()
+        LaunchScheduler.shared.start()
 
         // ── 路由注册 ──
         RNBaseViewController.registerPageRoute()

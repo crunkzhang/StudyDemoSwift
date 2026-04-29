@@ -27,6 +27,7 @@ target 'WeChatSwift' do
   pod 'ExtensionKit',   :path => 'Foundation/ExtensionKit'
   pod 'NavigateKit',    :path => 'Foundation/NavigateKit'
   pod 'DDNetwork',      :path => 'Foundation/DDNetwork'
+  pod 'CatonMonitorKit', :path => 'Foundation/CatonMonitorKit'
 
   # ── Platform 层 ──
   pod 'WeChatUI',       :path => 'Modules/WeChatKit/WeChatUI'
@@ -93,7 +94,7 @@ post_install do |installer|
   # Xcode Navigator 分组：按层次归类，折叠后一目了然
   group_map = {
     'Platform'   => %w[WeChatUI WeChatRouter WeChatNetAPI WeChatRN],
-    'Foundation' => %w[ExtensionKit NavigateKit DDNetwork],
+    'Foundation' => %w[ExtensionKit NavigateKit DDNetwork CatonMonitorKit],
     'Business'   => %w[ChatModule ContactModule DiscoverModule MeModule],
   }
   own_pods = group_map.values.flatten

@@ -4,6 +4,7 @@ import ChatModule
 import ContactModule
 import DiscoverModule
 import MeModule
+import CatonMonitorKit
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -12,6 +13,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         LaunchMetrics.mark("didFinishStart")
+
+        // ── 卡顿检测 ──
+        CatonMonitor.shared.start()
 
         // ── 原有 RN 初始化 ──
         RNFactoryManager.shared.setup()

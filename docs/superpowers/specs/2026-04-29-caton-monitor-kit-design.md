@@ -10,7 +10,7 @@
 |------|------|------|
 | 场景 | Debug 诊断 + Release 线上监控 | 企业级项目需要两者兼顾 |
 | 检测手段 | RunLoop + FPS + Watchdog | 覆盖短卡顿、掉帧、死锁三种场景 |
-| 堆栈采集 | `backtrace()` 子线程采集 | 性能与精度平衡，Release 下开销极低 |
+| 堆栈采集 | `thread_get_state` + FP 链回溯 | 子线程获取主线程寄存器状态，沿 FP 链回溯栈帧地址，Release 下开销极低 |
 | 上报 | 本地持久化 + Reporter 协议注入 | 不绑定具体后端，业务方自行对接 |
 | 架构位置 | Foundation 层 | 零业务依赖，可跨项目复用 |
 | 开发体验 | 控制台日志 + Debug 浮窗 | FPS 实时显示 + 卡顿闪红 |
@@ -35,7 +35,9 @@ Modules/Foundation/CatonMonitorKit/
 │   ├── FPSDetector.swift           ← 帧率检测（CADisplayLink）
 │   └── WatchdogDetector.swift      ← 独立线程死锁检测
 ├── StackCapture/
-│   └── StackCapture.swift          ← backtrace() 主线程堆栈采集
+│   └── StackCapture.swift          ← thread_get_state + FP 链回溯主线程堆栈
+├── PageTracker/
+│   └── PageTracker.swift           ← swizzle viewDidAppear 维护页面栈，提供当前页面类名
 ├── Storage/
 │   ├── CatonStorable.swift         ← 存储协议
 │   └── CatonDiskStore.swift        ← JSON 文件本地持久化
@@ -66,7 +68,7 @@ struct CatonEvent {
     let stackTrace: [String]      // 堆栈帧地址（Release）或符号化堆栈（Debug）
     let timestamp: Date
     let threadInfo: ThreadInfo    // 主线程 QoS、CPU 占用
-    let page: String?             // 当前页面（topViewController 类名）
+    let page: String?             // 当前页面（swizzle viewDidAppear 维护的页面栈栈顶类名）
     let isAppInBackground: Bool
 }
 
@@ -77,7 +79,7 @@ enum CatonType: String, Codable {
 }
 
 struct ThreadInfo {
-    let cpuUsage: Double          // 主线程 CPU 占用率
+    let cpuUsage: Double          // 主线程 CPU 时间占比（thread_info THREAD_BASIC_INFO）
     let threadCount: Int          // 当前进程线程数
 }
 ```
@@ -128,11 +130,12 @@ protocol CatonDetectable: AnyObject {
 
 ### RunLoopDetector
 
-子线程用信号量等待主线程 RunLoop 状态变化，超时即判定卡顿。
+子线程用信号量等待主线程 RunLoop 状态变化���超时即判定卡顿。
 
 - 注册 RunLoop Observer 监听 `kCFRunLoopBeforeSources` 和 `kCFRunLoopAfterWaiting`
-- 每次状态变化 signal 信号量
-- 子线程 `wait(timeout: runLoopThreshold)`，超时 → 采集堆栈 → 生成 `CatonEvent(.runLoop)`
+- 每���状态变化 signal 信号量，同时记录当前 activity 状态
+- 子线程 `wait(timeout: runLoopThreshold)`，超时 �� 采集堆栈 → 生成 `CatonEvent(.runLoop)`
+- **关键判定条件**：只有当前 activity 处于 `beforeSources`（正在处理事件源）或 `afterWaiting`（刚被唤醒正在处理）时超时才判定为卡顿。`beforeWaiting` 表示主线程即将进入空闲等待，超时是正常的，不应上报
 - 卡顿判定在子线程完成，不额外占用主线程资源
 
 ### FPSDetector
@@ -145,10 +148,11 @@ protocol CatonDetectable: AnyObject {
 
 ### WatchdogDetector
 
-独立高优先级线程定时 ping 主线程，超时未 pong 即判定死锁。
+独立高优先级线程定时检查主线程是否存活，超时即判定死锁。
 
-- 将 `flag = false`，`DispatchQueue.main.async { flag = true }` 作为 ping
-- 等待 `watchdogTimeout` 后检查 flag
+- 主线程通过 `CFRunLoopTimerRef`（添加到 `commonModes`）定时更新一个时间戳，确保滚动（tracking mode）期间也能正常更新
+- 子线程每隔 `watchdogTimeout` 检查时间戳是否过期，过期 → 采集堆栈 → 生成 `CatonEvent(.watchdog)`
+- 不使用 `DispatchQueue.main.async`：GCD main queue 在 default mode 下执行，滚动时 block 会延迟，导致误报
 - 线程优先级 `QOS_CLASS_USER_INTERACTIVE`，避免被调度饿死
 - 与 RunLoopDetector 互补：RunLoop 捕获 100ms~2s，Watchdog 捕获 >2s
 - 去重：同一时段 RunLoopDetector 已上报的事件，Watchdog 不重复上报
@@ -168,7 +172,8 @@ protocol CatonDetectable: AnyObject {
 
 关键约束：
 - 采集在子线程完成，不阻塞主线程
-- `backtrace()` 是 async-signal-safe 的
+- 不使用 `backtrace()`——该函数只能采集调用线程自身的堆栈，无法跨线程采集主线程
+- `thread_get_state` 是跨线程采集的正确方式，通过 Mach thread port 获取目标线程寄存器快照
 - 采集耗时控制在 1ms 以内
 
 ## 本地存储
@@ -268,8 +273,8 @@ CatonMonitor.start(config:)
 ```
 Detector 回调触发
   ├→ 1. StackCapture.capture() 采集堆栈
-  ├→ 2. 填充 page（当前 topViewController 类名）
-  ├→ 3. 填充 threadInfo（CPU 占用、线程数）
+  ├→ 2. 填充 page（通过 swizzle viewDidAppear 维护的页面栈获取当前页面类名，RN 页面通过 RNBaseViewController 自动覆盖）
+  ├→ 3. 填充 threadInfo（thread_info 获取 CPU 时间占比、线程数）
   ├→ 4. 去重检查（与最近事件比较 top 3 帧）
   ├→ 5. CatonDiskStore.save(event)
   ├→ 6. ReportStrategy.enqueue(event)

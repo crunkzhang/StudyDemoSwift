@@ -4,3 +4,9 @@
 [submodule "Foundation/NavigateKit"]
 	path = Foundation/NavigateKit
 	url = ./Foundation/NavigateKit
+[submodule "Foundation/DDNetwork"]
+	path = Foundation/DDNetwork
+	url = ./Foundation/DDNetwork
+[submodule "Foundation/CatonMonitorKit"]
+	path = Foundation/CatonMonitorKit
+	url = ./Foundation/CatonMonitorKit

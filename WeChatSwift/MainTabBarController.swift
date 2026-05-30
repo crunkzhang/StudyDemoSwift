@@ -19,10 +19,7 @@ class MainTabBarController: UITabBarController {
     }
 
     private func setupViewControllers() {
-        // T12 占位:Phase 1 SessionListViewController 落地前先用占位 VC 让编译通过
-        let chat = UIViewController()
-        chat.view.backgroundColor = .white
-        chat.title = "微信 (重构中)"
+        let chat = SessionListViewController()
         chat.tabBarItem = UITabBarItem(
             title: "微信",
             image: UIImage(systemName: "message"),

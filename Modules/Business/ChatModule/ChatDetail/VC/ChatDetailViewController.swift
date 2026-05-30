@@ -98,7 +98,7 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
 
     /// 简单 id-keyed diff:
     /// - 同一组 id 集合 → 只是 status 变化,逐条 reloadRows 不动滚动
-    /// - 集合变化(新消息/删除)→ reloadData + 滚到底
+    /// - 集合变化(新消息/删除)→ reloadData,智能决定要不要滚底
     private func apply(_ newMessages: [MessageCellModel]) {
         let oldKeys = Set(messages.map(\.localMsgId))
         let newKeys = Set(newMessages.map(\.localMsgId))
@@ -118,17 +118,30 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
                 )
             }
         } else {
-            // 有增删,全量 reload + 滚到底
+            // P1-5 智能滚动:有增删 reload,但只在以下场景滚底,避免用户上滑看历史被打断:
+            //  - 用户当前已经在底部(允许误差 100pt)
+            //  - 或者新到的最后一条是我自己发的(我发的总是要滚到底)
+            let wasNearBottom = isNearBottom
+            let lastIsFromMe = newMessages.last?.isFromMe ?? false
             messages = newMessages
             tableView.reloadData()
-            scrollToBottomIfNeeded()
+            if wasNearBottom || lastIsFromMe {
+                scrollToBottom(animated: true)
+            }
         }
     }
 
-    private func scrollToBottomIfNeeded() {
+    /// 判断当前是否在(接近)底部 — 100pt 误差,避免精确判断在 reloadData 后失准。
+    private var isNearBottom: Bool {
+        guard tableView.contentSize.height > tableView.bounds.height else { return true }
+        let bottomY = tableView.contentSize.height - tableView.bounds.height
+        return tableView.contentOffset.y >= bottomY - 100
+    }
+
+    private func scrollToBottom(animated: Bool) {
         guard !messages.isEmpty else { return }
         let ip = IndexPath(row: messages.count - 1, section: 0)
-        tableView.scrollToRow(at: ip, at: .bottom, animated: true)
+        tableView.scrollToRow(at: ip, at: .bottom, animated: animated)
     }
 }
 

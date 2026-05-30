@@ -1587,72 +1587,18 @@ git commit -m "feat(game): GameRunnerVC 加 ErrorView + 重试按钮"
 
 ---
 
-### Task 18: GameRunnerVC 加下载进度 ProgressView
+### Task 18: GameRunnerVC 加 "下载中..." 文案
 
 **Files:**
-- Modify: `Modules/Business/GameModule/BundleManager/GameDownloader.swift`(加 progress 回调)
-- Modify: `Modules/Business/GameModule/BundleManager/GameBundleManager.swift`(透传 progress)
-- Modify: `Modules/Business/GameModule/Runner/VC/GameRunnerViewController.swift`(显示进度条)
-- Modify: `Modules/Business/GameModule/Runner/GameLoadState.swift`(加 progress 字段)
+- Modify: `Modules/Business/GameModule/Runner/VC/GameRunnerViewController.swift`
 
-- [ ] **Step 1: GameLoadState 加 progress 字段**
+**说明**:`URLSession.download(from:)` 不带 progress 回调,要精确进度需要 `URLSessionDownloadDelegate` 大改。
+Phase 2 只加 spinner 旁边的 "下载中..." 文案让 UI 不冷清,**精确进度延后**(YAGNI)。
+GameLoadState 保持 Task 12 原样,不加 progress 字段。
 
-```swift
-public enum GameLoadState {
-    case idle
-    case downloading(progress: Double)   // 0.0 ~ 1.0
-    case ready
-    case failed(reason: String)
-}
-```
+- [ ] **Step 1: 加 loadingLabel 属性**
 
-- [ ] **Step 2: GameDownloader 加 progress 回调**
-
-```swift
-public func download(url: URL,
-                     expectedSHA256: String,
-                     destination: URL,
-                     onProgress: ((Double) -> Void)? = nil) async throws {
-    // 用 dataTask 拿到 progress,而不是 download(from:)
-    // 简化:用 URLSession.shared.downloadTask + delegate 太复杂,
-    //      改用 Foundation 的 URLSession.download(for:) 没 progress,
-    //      退化方案:不展示精确进度,只展示"下载中"。
-    // 完整实现见 Phase 3 README 补充说明。
-    let (tmpURL, response) = try await session.download(from: url)
-    onProgress?(1.0)
-    // ... 后续同 Task 8
-}
-```
-
-简化策略:**Phase 2 不实现精确 progress**,仍用 spinner + "下载中..."文案。下面这一节其实可以跳过,留到 Phase 3 完善。
-
-- [ ] **Step 3: 跳过,保留 GameLoadState 不带 progress(回滚)**
-
-把 GameLoadState 改回:
-
-```swift
-public enum GameLoadState {
-    case idle
-    case downloading            // Phase 2 简单 spinner + 文案
-    case ready
-    case failed(reason: String)
-}
-```
-
-GameRunnerVC 加一个 "下载中..." label,跟 spinner 一起显示。
-applyState `.downloading` 分支:
-
-```swift
-case .downloading:
-    loadingView.startAnimating()
-    loadingLabel.text = "下载中..."
-    loadingLabel.isHidden = false
-    loadingView.isHidden = false
-    errorContainer.isHidden = true
-    webView.isHidden = true
-```
-
-加 loadingLabel(VC properties):
+`GameRunnerViewController.swift` properties 区加:
 
 ```swift
 private let loadingLabel: UILabel = {
@@ -1660,11 +1606,12 @@ private let loadingLabel: UILabel = {
     l.textColor = .white
     l.font = .systemFont(ofSize: 13)
     l.textAlignment = .center
+    l.isHidden = true
     return l
 }()
 ```
 
-setup 时:
+- [ ] **Step 2: viewDidLoad 加 loadingLabel 布局**
 
 ```swift
 view.addSubview(loadingLabel)
@@ -1674,7 +1621,37 @@ loadingLabel.snp.makeConstraints { make in
 }
 ```
 
-其他 case 把 `loadingLabel.isHidden = true`。
+- [ ] **Step 3: applyState 更新各分支的 loadingLabel 显隐**
+
+`.downloading` 分支显示 "下载中...",其他分支隐藏:
+
+```swift
+case .idle:
+    loadingView.isHidden = true
+    loadingLabel.isHidden = true
+    errorContainer.isHidden = true
+    webView.isHidden = true
+case .downloading:
+    loadingView.startAnimating()
+    loadingView.isHidden = false
+    loadingLabel.text = "下载中..."
+    loadingLabel.isHidden = false
+    errorContainer.isHidden = true
+    webView.isHidden = true
+case .ready:
+    loadingView.stopAnimating()
+    loadingView.isHidden = true
+    loadingLabel.isHidden = true
+    errorContainer.isHidden = true
+    webView.isHidden = false
+case .failed(let reason):
+    loadingView.stopAnimating()
+    loadingView.isHidden = true
+    loadingLabel.isHidden = true
+    errorLabel.text = reason
+    errorContainer.isHidden = false
+    webView.isHidden = true
+```
 
 - [ ] **Step 4: 编译 + Commit**
 

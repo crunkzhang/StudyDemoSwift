@@ -36,10 +36,7 @@ public final class ChatDetailLogic {
         observer.start()
         cancellable = observer.changeSubject
             .receive(on: DispatchQueue.global(qos: .userInitiated))
-            .sink { [weak self] _ in
-                print("[DBG][Logic-\(self?.sessionId ?? "?")] observer 触发 reload")
-                self?.reload()
-            }
+            .sink { [weak self] _ in self?.reload() }
     }
 
     public func stop() {
@@ -78,8 +75,6 @@ public final class ChatDetailLogic {
 
     private func reload() {
         let page = handler.fetchPage(beforeSeqId: nil, limit: 50)
-        let statuses = page.map { "\($0.localMsgId.prefix(6))=\($0.status)" }.joined(separator: ",")
-        print("[DBG][Logic-\(sessionId)] reload → \(page.count) 条, statuses=[\(statuses)]")
         DispatchQueue.main.async { [weak self] in
             self?.messages = page
         }

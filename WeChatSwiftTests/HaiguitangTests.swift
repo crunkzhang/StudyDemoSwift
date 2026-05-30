@@ -34,4 +34,35 @@ final class HaiguitangServiceTests: XCTestCase {
         let sol = await svc.debugSolution(for: r.puzzleId)
         XCTAssertEqual(sol, "那不是海龟汤")
     }
+
+    func test_ask_parsesVerdict_andAppendsHistory() async throws {
+        let svc = sequencedService([
+            #"{"title":"T","surface":"S","solution":"真相"}"#,
+            #"{"verdict":"yes","comment":"没错","solved":false}"#
+        ])
+        let start = try await svc.startPuzzle(difficulty: "normal", theme: nil)
+        let ask = try await svc.ask(puzzleId: start.puzzleId, question: "他认识凶手吗?")
+        XCTAssertEqual(ask.verdict, .yes)
+        XCTAssertEqual(ask.comment, "没错")
+        XCTAssertFalse(ask.solved)
+        let count = await svc.debugHistoryCount(for: start.puzzleId)
+        XCTAssertEqual(count, 1)
+    }
+
+    func test_ask_malformedJSON_fallsBackSafely() async throws {
+        let svc = sequencedService([
+            #"{"title":"T","surface":"S","solution":"真相"}"#,
+            "嗯……这个嘛(模型抽风,非 JSON)"
+        ])
+        let start = try await svc.startPuzzle(difficulty: "normal", theme: nil)
+        let ask = try await svc.ask(puzzleId: start.puzzleId, question: "?")
+        XCTAssertEqual(ask.verdict, .irrelevant)   // 安全降级
+        XCTAssertFalse(ask.comment.isEmpty)
+    }
+
+    func test_ask_unknownPuzzle_throws() async {
+        let svc = service("{}")
+        do { _ = try await svc.ask(puzzleId: "nope", question: "?"); XCTFail() }
+        catch {}
+    }
 }

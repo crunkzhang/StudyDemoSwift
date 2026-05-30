@@ -33,6 +33,39 @@ public actor HaiguitangService {
         return StartResult(puzzleId: id, title: title, surface: surface)
     }
 
+    // MARK: - 裁判
+
+    func ask(puzzleId: String, question: String) async throws -> AskResult {
+        guard var session = sessions[puzzleId] else { throw AIError.provider(message: "puzzle not found") }
+        let ctx = HaiguitangPrompts.contextBlock(surface: session.surface,
+                                                 solution: session.solution, history: session.history)
+        let user = ctx + "\n【玩家本次提问】\n\(question)"
+        let req = AIRequest(system: HaiguitangPrompts.judgeSystem,
+                            messages: [AIMessage(role: .user, content: user)],
+                            maxTokens: 128, temperature: 0.2)
+
+        let parsed = await completeJSONWithRetry(req)
+        let verdict = (parsed?["verdict"] as? String).flatMap(Verdict.init(rawValue:)) ?? .irrelevant
+        let comment = (parsed?["comment"] as? String) ?? "我没太懂,换个问法?"
+        let solved = (parsed?["solved"] as? Bool) ?? false
+
+        session.history.append((question: question, verdict: verdict))
+        if solved { session.solved = true }
+        sessions[puzzleId] = session
+        return AskResult(verdict: verdict, comment: comment, solved: solved)
+    }
+
+    /// 调一次,解析失败再重试一次;最终仍失败返回 nil(由调用方走安全降级默认值)。
+    private func completeJSONWithRetry(_ req: AIRequest) async -> [String: Any]? {
+        for _ in 0..<2 {
+            if let resp = try? await client.complete(req),
+               let obj = Self.extractJSON(resp.text) {
+                return obj
+            }
+        }
+        return nil
+    }
+
     // MARK: - JSON 守卫
 
     /// 直接解析失败时,抽取首个 {...} 子串再试。返回顶层字典或 nil。

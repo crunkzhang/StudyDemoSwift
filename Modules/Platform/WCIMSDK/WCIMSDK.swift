@@ -5,10 +5,18 @@ public enum WCIMSDK {
     public private(set) static var currentUserId: String = ""
     public private(set) static var sessionDB: SessionDB?
     public private(set) static var seqIdManager: SeqIdManager?
+    public private(set) static var syncCoordinator: SyncCoordinator?
 
     public static func setup(userId: String) {
         currentUserId = userId
-        sessionDB = SessionDB(userId: userId)
-        seqIdManager = SeqIdManager(userId: userId)
+        let sdb = SessionDB(userId: userId)
+        let seq = SeqIdManager(userId: userId)
+        sessionDB = sdb
+        seqIdManager = seq
+        syncCoordinator = SyncCoordinator(
+            service: MockSyncService(),
+            sessionDB: sdb,
+            seqIdManager: seq
+        )
     }
 }

@@ -54,6 +54,57 @@ Business/ChatModule       ← 业务侧(MVVM)
 **依赖方向**：ChatModule → WCIMSDK，WCIMSDK 无任何上游业务依赖。
 **职责分离**：WCIMSDK 提供 DB 操作 + Service 通信 + 变更广播；ChatModule 在其上做业务组装。其他业务模块（如 ContactModule 想读最近会话）可自行写轻 Logic 直接访问 WCIMSDK，不依赖 ChatModule。
 
+### ChatModule 目录结构（附录）
+
+按"页面顶层 + 内部 VC/Logic/View/Model 四目录"组织。Phase 标签标注施工归属。
+
+```
+Modules/Business/ChatModule/
+├── ChatModule.podspec
+├── ChatModule.swift                                  # registerRoutes() 入口
+│
+├── SessionList/                                      # 会话列表页
+│   ├── VC/
+│   │   └── SessionListViewController.swift          [P1]
+│   ├── Logic/
+│   │   ├── SessionListLogic.swift                   [P1] # 协调者(@Published + async)
+│   │   ├── SessionDBObserver.swift                  [P1] # 订阅 DBChangeStream.sessions
+│   │   ├── SessionDBHandler.swift                   [P1] # 封装 SessionDB 读取
+│   │   └── SortRule/
+│   │       ├── SortRule.swift                       [P1] # protocol + SortRuleChain
+│   │       ├── PinnedSortRule.swift                 [P1]
+│   │       ├── TimestampSortRule.swift              [P1] # 兜底
+│   │       ├── DraftSortRule.swift                  [P3]
+│   │       └── UnreadFirstSortRule.swift            [P3]
+│   ├── View/
+│   │   └── SessionListCell.swift                    [P1]
+│   └── Model/
+│       └── SessionCellModel.swift                   [P1] # Hashable struct
+│
+└── ChatDetail/                                       # 聊天详情页
+    ├── VC/
+    │   └── ChatDetailViewController.swift           [P2]
+    ├── Logic/
+    │   ├── ChatDetailLogic.swift                    [P2] # 协调者(per session 实例)
+    │   ├── MessageDBObserver.swift                  [P2] # 订阅 messagesPublisher(sessionId)
+    │   ├── MessageDBHandler.swift                   [P2] # 封装分页/锚定查询
+    │   ├── SendMsgHandler.swift                     [P2] # 发送状态机 + 重试
+    │   └── MessageRenderCache.swift                 [P3] # 高度 + 富文本缓存
+    ├── View/
+    │   ├── ChatInputBar.swift                       [P2]
+    │   └── Cells/
+    │       ├── BaseMessageCell.swift                [P2] # 基类,预留图片/语音子类
+    │       └── TextMessageCell.swift                [P2]
+    └── Model/
+        └── MessageCellModel.swift                   [P2] # Hashable struct
+```
+
+**说明**：
+- **MessageRenderCache 归入 ChatDetail/Logic/** —— 本质是 Logic 辅助组件（被 MessageDBHandler 调用预计算）
+- **SortRule/ 子目录在 Logic 下** —— Rule 子类天然"一类多个"，单独成组
+- **每个页面四目录严格对齐 MVVM**：VC = ViewController 入口，View = 子视图/Cell，Logic = 业务，Model = 数据
+- **podspec 不用改** —— 用 `**/*.swift` glob，目录嵌套不影响 source_files
+
 ---
 
 ## 三、架构总览

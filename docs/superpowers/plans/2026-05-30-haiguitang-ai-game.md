@@ -56,13 +56,20 @@ HelloRN/WeChatGames/haiguitang/                    ← 新建 H5 bundle  [P1]
 └── README.md
 ```
 
-**测试命令统一格式**(沿用现有 plan 约定,`<Pod>-Unit-Tests` 为 pod test_spec 生成的 scheme):
-```bash
-xcodebuild test -workspace WeChatSwift.xcworkspace -scheme WeChatSwift \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
-  -only-testing:AIKit-Unit-Tests/<TestClass> 2>&1 | tail -15
-```
-GameModule 的测试把 scheme 段换成 `GameModule-Unit-Tests`。
+**测试与验证约定(执行时修正):**
+本仓库 `generate_multiple_pod_projects` 下 pod 的 `test_spec` **不会**生成可跑的 `.xctest` target,
+所以测试统一放进 app 的 `WeChatSwiftTests`(`@testable import AIKit/GameModule`),由 `WeChatSwift` scheme 承载。
+
+- **编译验证(每个 Task,可 CLI)**:只编译目标 pod,不链接 app,绕开 RN 链接问题:
+  ```bash
+  DEVELOPER_DIR=/Applications/Xcode-26.4.1.app/Contents/Developer xcodebuild build \
+    -workspace WeChatSwift.xcworkspace -scheme AIKit \
+    -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+  ```
+  GameModule 改成 `-scheme GameModule`。**新增 pod 源文件后需先 `pod install`** 才会纳入编译。
+- **跑单测**:需链接整个 app(TEST_HOST),撞 RN `getDebugProps` 链接问题;在 Xcode GUI ⌘U 跑
+  (scheme BuildAction 需含 `Pods-WeChatSwift` 且排在 app 前)。
+- 顶层 `xcodebuild` 默认指向 CommandLineTools,需 `DEVELOPER_DIR=/Applications/Xcode-26.4.1.app/Contents/Developer`。
 
 ---
 

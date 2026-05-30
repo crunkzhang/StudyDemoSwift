@@ -17,6 +17,7 @@ Pod::Spec.new do |s|
 
   s.frameworks = 'UIKit', 'Foundation', 'WebKit'
 
+  s.dependency 'AIKit'
   s.dependency 'WeChatUI'
   s.dependency 'WeChatRouter'
   s.dependency 'NavigateKit'

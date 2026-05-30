@@ -45,13 +45,13 @@ public final class MessageDB {
                 return try db.getObjects(
                     fromTable: table,
                     where: MessageModel.Properties.seqId < before,
-                    orderBy: [MessageModel.Properties.seqId.asOrder(by: .descending)],
+                    orderBy: [MessageModel.Properties.seqId.order(.descending)],
                     limit: limit
                 )
             } else {
                 return try db.getObjects(
                     fromTable: table,
-                    orderBy: [MessageModel.Properties.seqId.asOrder(by: .descending)],
+                    orderBy: [MessageModel.Properties.seqId.order(.descending)],
                     limit: limit
                 )
             }

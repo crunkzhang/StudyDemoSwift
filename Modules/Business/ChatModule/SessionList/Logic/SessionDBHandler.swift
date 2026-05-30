@@ -28,7 +28,8 @@ final class SessionDBHandler {
             formattedTime: formatTime(m.lastTimestamp),
             unreadCount: m.unreadCount,
             isPinned: m.isPinned,
-            lastTimestamp: m.lastTimestamp
+            lastTimestamp: m.lastTimestamp,
+            draft: m.draft
         )
     }
 

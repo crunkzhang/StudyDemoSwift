@@ -71,11 +71,12 @@ public final class SessionListLogic {
 // MARK: - 默认排序链
 
 public extension SortRuleChain {
-    /// Phase 1 默认链:置顶优先 → 时间倒序兜底。
-    /// Phase 3 会加入 DraftSortRule / UnreadFirstSortRule。
+    /// 默认链:置顶 → 草稿 → 时间倒序。
+    /// UnreadFirstSortRule 按业务方需求可选开启,这里不放进默认。
     static var `default`: SortRuleChain {
         SortRuleChain(rules: [
             PinnedSortRule(),
+            DraftSortRule(),
             TimestampSortRule(),
         ])
     }

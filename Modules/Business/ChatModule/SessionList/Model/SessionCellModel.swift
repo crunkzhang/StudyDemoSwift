@@ -10,10 +10,12 @@ public struct SessionCellModel: Hashable {
     public let unreadCount: Int
     public let isPinned: Bool
     public let lastTimestamp: Int64
+    public let draft: String?
 
     public init(sessionId: String, contactName: String, avatarURL: String?,
                 lastMsgPreview: String, formattedTime: String,
-                unreadCount: Int, isPinned: Bool, lastTimestamp: Int64) {
+                unreadCount: Int, isPinned: Bool, lastTimestamp: Int64,
+                draft: String? = nil) {
         self.sessionId = sessionId
         self.contactName = contactName
         self.avatarURL = avatarURL
@@ -22,6 +24,7 @@ public struct SessionCellModel: Hashable {
         self.unreadCount = unreadCount
         self.isPinned = isPinned
         self.lastTimestamp = lastTimestamp
+        self.draft = draft
     }
 
     /// hash 只用主键 sessionId — DiffableDataSource 用此判断"是不是同一行"
@@ -39,5 +42,6 @@ public struct SessionCellModel: Hashable {
             && l.unreadCount == r.unreadCount
             && l.isPinned == r.isPinned
             && l.lastTimestamp == r.lastTimestamp
+            && l.draft == r.draft
     }
 }

@@ -50,6 +50,11 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
         view.addSubview(inputBar)
         inputBar.delegate = self
 
+        // 点上方区域收键盘 — cancelsTouchesInView=false 不影响 cell 点击/重发
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        tableView.addGestureRecognizer(tap)
+
         tableView.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
             make.bottom.equalTo(inputBar.snp.top)
@@ -70,6 +75,10 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
         super.viewDidAppear(animated)
         // 进会话即"已读" — SessionList 红点消失
         logic.markAllRead()
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
     }
 
     deinit {

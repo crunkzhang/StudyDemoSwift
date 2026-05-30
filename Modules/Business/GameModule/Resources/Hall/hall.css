@@ -1,0 +1,193 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  background: #F2F2F7;
+  color: #1C1C1E;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ── Hero ───────────────────────────────────────────── */
+.hero {
+  padding: 24px 20px 28px;
+  background: linear-gradient(135deg, #07C160 0%, #06AD56 60%, #048A45 100%);
+  color: white;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 6px 18px rgba(7, 193, 96, 0.18);
+}
+.hero-eyebrow {
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 600;
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+.hero-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.hero-sub {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+/* ── Section header ─────────────────────────────────── */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 22px 20px 10px;
+}
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6E6E73;
+  letter-spacing: 0.3px;
+}
+.section-tag {
+  font-size: 11px;
+  color: #8E8E93;
+}
+
+/* ── Game cards (list) ──────────────────────────────── */
+.game-list {
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  position: relative;
+  transition: transform 0.12s ease, background 0.12s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.card:active {
+  transform: scale(0.985);
+  background: #F8F8FA;
+}
+
+.card .icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  object-fit: cover;
+  background: linear-gradient(135deg, #34C759, #07C160);
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(7, 193, 96, 0.18);
+}
+.card .icon[data-fallback="true"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: white;
+  font-weight: 700;
+}
+
+.card .meta {
+  flex: 1;
+  margin-left: 14px;
+  min-width: 0;
+}
+.card .title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card .title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1C1C1E;
+  line-height: 1.2;
+}
+.card .badge-mini {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+}
+.card .badge-mini.installed {
+  background: rgba(7, 193, 96, 0.12);
+  color: #07C160;
+}
+.card .badge-mini.new {
+  background: rgba(255, 149, 0, 0.14);
+  color: #FF9500;
+}
+.card .sub {
+  font-size: 12px;
+  color: #8E8E93;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card .sub .dot { color: #C7C7CC; font-weight: 700; }
+
+.card .action {
+  margin-left: 10px;
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.card .action.play {
+  background: #07C160;
+  color: white;
+  box-shadow: 0 2px 6px rgba(7, 193, 96, 0.25);
+}
+.card .action.download {
+  background: rgba(0, 122, 255, 0.1);
+  color: #007AFF;
+}
+
+/* ── Empty state ────────────────────────────────────── */
+.empty {
+  margin: 60px 20px;
+  text-align: center;
+  color: #8E8E93;
+  font-size: 14px;
+}
+.empty-icon {
+  font-size: 38px;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+/* ── Footer ─────────────────────────────────────────── */
+.footer {
+  margin-top: 28px;
+  padding: 18px 20px calc(28px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.footer-line {
+  width: 40px;
+  height: 2px;
+  background: #D1D1D6;
+  border-radius: 1px;
+}
+.footer-text {
+  font-size: 11px;
+  color: #C7C7CC;
+  letter-spacing: 0.4px;
+}

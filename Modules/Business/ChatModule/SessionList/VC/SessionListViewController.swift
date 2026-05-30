@@ -56,7 +56,7 @@ public final class SessionListViewController: BaseViewController {
     }
 
     @objc private func manualSync() {
-        Task { await logic.triggerRemoteSync() }
+        Task { await logic.triggerRemoteSync(force: true) }
     }
 
     private func bind() {

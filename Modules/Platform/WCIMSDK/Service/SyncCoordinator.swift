@@ -24,7 +24,9 @@ public final class SyncCoordinator {
     }
 
     /// 触发一次增量同步。并发触发自动合并 — 同时只跑一次,避免重复拉。
-    public func triggerSync() async {
+    /// - Parameter force: true 表示用户主动触发(Mock 服务才会吐新增量);
+    ///   false 用于 viewDidAppear / 定时兜底等被动触发场景。
+    public func triggerSync(force: Bool = false) async {
         lock.lock()
         if inFlight { lock.unlock(); return }
         inFlight = true
@@ -35,10 +37,12 @@ public final class SyncCoordinator {
         }
 
         do {
-            let batch = try await service.fetchIncremental(after: seqIdManager.currentSeqId)
+            let batch = try await service.fetchIncremental(
+                after: seqIdManager.currentSeqId, force: force
+            )
             try applyBatch(batch)
             seqIdManager.advance(to: batch.maxSeqId)
-            print("[Sync] ✅ applied \(batch.sessions.count) sessions, advanced seqId → \(batch.maxSeqId)")
+            print("[Sync] ✅ applied \(batch.sessions.count) sessions, advanced seqId → \(batch.maxSeqId) (force=\(force))")
         } catch {
             print("[Sync] ❌ failed: \(error)")
         }

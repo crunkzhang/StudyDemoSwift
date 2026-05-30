@@ -6,6 +6,22 @@ options:
   developmentLanguage: zh-Hans
 
 targets:
+  WeChatSwiftTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - WeChatSwiftTests
+    dependencies:
+      - target: WeChatSwift
+    settings:
+      base:
+        BUNDLE_LOADER: $(TEST_HOST)
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/WeChatSwift.app/WeChatSwift
+        PRODUCT_BUNDLE_IDENTIFIER: com.study.wcSwiftTests
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 2DAFKPU228
+        GENERATE_INFOPLIST_FILE: YES
+
   WeChatSwift:
     type: application
     platform: iOS
@@ -38,6 +54,7 @@ targets:
         UIUserInterfaceStyle: Light
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        RCTNewArchEnabled: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.study.wcSwift
@@ -55,7 +72,12 @@ schemes:
     build:
       targets:
         WeChatSwift: all
+        WeChatSwiftTests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - WeChatSwiftTests
     archive:
       config: Release

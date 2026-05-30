@@ -39,9 +39,9 @@ final class MessageDBHandler {
         }
 
         let models = sortedRaw.map(toCellModel)
-        // 后台批量预算高度,主线程零计算
-        DispatchQueue.global(qos: .userInitiated).async { [renderCache] in
-            Self.precalculate(models: models, cache: renderCache)
+        // 后台批量预算高度,主线程零计算;Task + 分块 yield,大列表不阻塞 cooperative pool
+        Task(priority: .userInitiated) { [renderCache] in
+            await Self.precalculate(models: models, cache: renderCache)
         }
         return models
     }
@@ -70,9 +70,15 @@ final class MessageDBHandler {
     private static let rowVMargin: CGFloat = 6 + 6
     private static let textFont = UIFont.systemFont(ofSize: 16)
 
-    private static func precalculate(models: [MessageCellModel], cache: MessageRenderCache) {
+    /// 分块 yield — 每 20 条让出一次 cooperative thread,大列表不阻塞其他 Task
+    private static let chunkSize = 20
+
+    private static func precalculate(models: [MessageCellModel], cache: MessageRenderCache) async {
         let contentWidth = bubbleMaxWidth - bubbleHPadding
-        for m in models {
+        for (i, m) in models.enumerated() {
+            if i > 0 && i % chunkSize == 0 {
+                await Task.yield()                  // 让出执行权,防止长循环阻塞
+            }
             guard cache.height(for: m.localMsgId) == nil else { continue }
             let rect = (m.text as NSString).boundingRect(
                 with: CGSize(width: contentWidth, height: .greatestFiniteMagnitude),

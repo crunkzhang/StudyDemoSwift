@@ -12,6 +12,7 @@ Pod::Spec.new do |s|
   s.swift_version = '5.0'
 
   s.source_files = '**/*.swift'
+  s.exclude_files = 'ChatModuleTests/**/*'
 
   s.frameworks = 'UIKit', 'Foundation'
 
@@ -20,4 +21,10 @@ Pod::Spec.new do |s|
   s.dependency 'WeChatRN'
   s.dependency 'ExtensionKit'
   s.dependency 'SnapKit'
+  s.dependency 'WCIMSDK'
+
+  s.test_spec 'ChatModuleTests' do |ts|
+    ts.source_files = 'ChatModuleTests/**/*.swift'
+    ts.frameworks = 'XCTest'
+  end
 end

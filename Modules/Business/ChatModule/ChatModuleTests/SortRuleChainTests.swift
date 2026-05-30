@@ -19,6 +19,7 @@ final class SortRuleChainTests: XCTestCase {
 
     private func m(_ id: String, name: String = "x", unread: Int = 0) -> SessionCellModel {
         SessionCellModel(sessionId: id, contactName: name, avatarURL: nil,
+                         avatarInitial: String(name.prefix(1)), avatarColor: 0x07C160,
                          lastMsgPreview: "", formattedTime: "",
                          unreadCount: unread, isPinned: false, lastTimestamp: 0)
     }

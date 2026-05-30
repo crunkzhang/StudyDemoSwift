@@ -44,6 +44,7 @@ target 'WeChatSwift' do
 
   # ── 三方库 ──
   pod 'SnapKit'
+  pod 'SDWebImage'
 
   # ── RN ──
   use_react_native!(:path => rn_path, :app_path => rn_project)

@@ -21,6 +21,7 @@ Pod::Spec.new do |s|
   s.dependency 'WeChatRN'
   s.dependency 'ExtensionKit'
   s.dependency 'SnapKit'
+  s.dependency 'SDWebImage'
   s.dependency 'WCIMSDK'
 
   s.test_spec 'ChatModuleTests' do |ts|

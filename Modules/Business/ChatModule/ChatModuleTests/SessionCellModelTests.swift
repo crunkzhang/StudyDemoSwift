@@ -8,6 +8,7 @@ final class SessionCellModelTests: XCTestCase {
                       ts: Int64 = 100) -> SessionCellModel {
         SessionCellModel(
             sessionId: sessionId, contactName: name, avatarURL: nil,
+            avatarInitial: String(name.prefix(1)), avatarColor: 0x07C160,
             lastMsgPreview: "hi", formattedTime: "12:00",
             unreadCount: unread, isPinned: pinned, lastTimestamp: ts
         )

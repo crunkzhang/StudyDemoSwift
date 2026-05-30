@@ -45,8 +45,26 @@ public final class MockSyncService: SyncServiceProtocol {
                                 "明天见", "周末爬山", "刚到家", "哈哈哈哈", "已读",
                                 "刚刚有点事", "马上到", "等会再说", "OK", "嗯嗯",
                                 "知道了", "辛苦了", "早安☀️", "happy birthday 🎂", "👌"]
+    private static let avatarURLs = [
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=240&q=80",
+        "https://images.unsplash.com/photo-1502323777036-f29e3972d82f?auto=format&fit=crop&w=240&q=80",
+    ]
 
     private static let myUserId = "mock_local_user"
+
+    /// 根据 sessionId 稳定取 avatarURL(同一个 session 每次都拿同一张)
+    private static func avatarURL(for sessionId: String) -> String {
+        let sum = sessionId.unicodeScalars.reduce(0) { $0 &+ Int($1.value) }
+        return avatarURLs[abs(sum) % avatarURLs.count]
+    }
 
     // MARK: - 批量构造
 
@@ -92,6 +110,7 @@ public final class MockSyncService: SyncServiceProtocol {
             let s = SessionModel()
             s.sessionId = sessionId
             s.contactName = "\(names[i % names.count])\(i)"
+            s.avatarURL = Self.avatarURL(for: sessionId)
             s.lastMsgId = last.msgId
             s.lastMsgPreview = decodeTextPreview(last.contentJSON)
             s.lastTimestamp = last.timestamp
@@ -137,6 +156,7 @@ public final class MockSyncService: SyncServiceProtocol {
             let s = SessionModel()
             s.sessionId = sessionId
             s.contactName = "\(names[idx % names.count])\(idx)"
+            s.avatarURL = Self.avatarURL(for: sessionId)
             s.lastMsgId = m.msgId
             s.lastMsgPreview = decodeTextPreview(m.contentJSON)
             s.lastTimestamp = m.timestamp

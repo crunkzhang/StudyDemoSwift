@@ -24,6 +24,8 @@ final class SessionDBHandler {
             sessionId: m.sessionId,
             contactName: m.contactName,
             avatarURL: m.avatarURL,
+            avatarInitial: String(m.contactName.prefix(1)),
+            avatarColor: pickColor(for: m.sessionId),
             lastMsgPreview: m.lastMsgPreview ?? "",
             formattedTime: formatTime(m.lastTimestamp),
             unreadCount: m.unreadCount,
@@ -31,6 +33,17 @@ final class SessionDBHandler {
             lastTimestamp: m.lastTimestamp,
             draft: m.draft
         )
+    }
+
+    /// 兜底色块色板(微信常用绿/蓝/橙/红/紫等),按 sessionId 稳定取色
+    private static let avatarPalette: [UInt32] = [
+        0x07C160, 0x576B95, 0xFA9D3B, 0xE75A5A, 0x8B72BE,
+        0x2AAE67, 0xCC6633, 0x3399CC, 0xE6567A, 0x44BB77,
+    ]
+
+    private static func pickColor(for sessionId: String) -> UInt32 {
+        let sum = sessionId.unicodeScalars.reduce(0) { $0 &+ Int($1.value) }
+        return avatarPalette[abs(sum) % avatarPalette.count]
     }
 
     private static let hmFormatter: DateFormatter = {

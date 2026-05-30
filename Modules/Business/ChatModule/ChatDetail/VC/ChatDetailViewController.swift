@@ -104,12 +104,10 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
         let newKeys = Set(newMessages.map(\.localMsgId))
 
         if oldKeys == newKeys && oldKeys.count == newMessages.count {
-            // 只有内容变(发送 sending→sent / failed),逐条 reloadRows
-            let oldByKey = Dictionary(uniqueKeysWithValues: messages.map { ($0.localMsgId, $0) })
-            let changedIndices = newMessages.enumerated().compactMap { i, m -> Int? in
-                guard let oldM = oldByKey[m.localMsgId], oldM != m else { return nil }
-                return i
-            }
+            // 只有内容变(发送 sending→sent / failed),用 DiffHelper 算变更索引
+            let changedIndices = DiffHelper.changedIndices(
+                from: messages, to: newMessages, keyedBy: \.localMsgId
+            )
             messages = newMessages
             if !changedIndices.isEmpty {
                 tableView.reloadRows(

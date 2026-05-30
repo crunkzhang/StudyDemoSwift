@@ -138,12 +138,12 @@ public final class SessionListViewController: BaseViewController {
         snap.appendSections([.main])
         snap.appendItems(models, toSection: .main)
 
-        let oldSnap = dataSource.snapshot()
-        let oldByKey = Dictionary(uniqueKeysWithValues: oldSnap.itemIdentifiers.map { ($0.sessionId, $0) })
-        let toReconfigure = models.filter { new in
-            if let old = oldByKey[new.sessionId], old != new { return true }
-            return false
-        }
+        // 用 DiffHelper 找出内容变了的索引,转回 model 数组做 reconfigure
+        let oldItems = dataSource.snapshot().itemIdentifiers
+        let changedIndices = DiffHelper.changedIndices(
+            from: oldItems, to: models, keyedBy: \.sessionId
+        )
+        let toReconfigure = changedIndices.map { models[$0] }
         if !toReconfigure.isEmpty {
             snap.reconfigureItems(toReconfigure)
         }

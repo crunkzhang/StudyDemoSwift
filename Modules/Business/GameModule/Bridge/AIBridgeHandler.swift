@@ -25,6 +25,30 @@ public final class AIBridgeHandler: GameBridgeHandler {
                 let r = try await service.ask(puzzleId: id, question: q)
                 return .success(["verdict": r.verdict.rawValue, "comment": r.comment, "solved": r.solved])
 
+            case "ai.guess":
+                guard let id = params["puzzleId"] as? String,
+                      let g = params["guess"] as? String else {
+                    return .failure(code: "BAD_PARAMS", message: "缺少 puzzleId/guess")
+                }
+                let r = try await service.guess(puzzleId: id, guess: g)
+                var data: [String: Any] = ["solved": r.solved, "comment": r.comment]
+                if let sol = r.solution { data["solution"] = sol }
+                return .success(data)
+
+            case "ai.hint":
+                guard let id = params["puzzleId"] as? String else {
+                    return .failure(code: "BAD_PARAMS", message: "缺少 puzzleId")
+                }
+                let r = try await service.hint(puzzleId: id)
+                return .success(["hint": r.hint])
+
+            case "ai.giveUp":
+                guard let id = params["puzzleId"] as? String else {
+                    return .failure(code: "BAD_PARAMS", message: "缺少 puzzleId")
+                }
+                let r = try await service.giveUp(puzzleId: id)
+                return .success(["solution": r.solution])
+
             default:
                 return .failure(code: "UNKNOWN_METHOD", message: method)
             }

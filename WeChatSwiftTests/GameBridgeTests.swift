@@ -42,6 +42,15 @@ final class GameBridgeTests: XCTestCase {
         XCTAssertEqual(code, "NO_HANDLER")
     }
 
+    func test_giveUp_returnsSolution() async {
+        let h = handler([#"{"title":"T","surface":"S","solution":"汤底Y"}"#])
+        let start = await h.handle(method: "ai.startPuzzle", params: ["difficulty": "normal"])
+        guard case .success(let s) = start, let id = s["puzzleId"] as? String else { return XCTFail() }
+        let r = await h.handle(method: "ai.giveUp", params: ["puzzleId": id])
+        guard case .success(let data) = r else { return XCTFail() }
+        XCTAssertEqual(data["solution"] as? String, "汤底Y")
+    }
+
     func test_decode_capabilities() throws {
         let json = """
         { "manifestVersion":1,"updatedAt":"x","games":[{

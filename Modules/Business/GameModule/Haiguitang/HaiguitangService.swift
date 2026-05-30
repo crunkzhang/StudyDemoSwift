@@ -55,6 +55,37 @@ public actor HaiguitangService {
         return AskResult(verdict: verdict, comment: comment, solved: solved)
     }
 
+    func guess(puzzleId: String, guess: String) async throws -> GuessResult {
+        guard var session = sessions[puzzleId] else { throw AIError.provider(message: "not found") }
+        let ctx = HaiguitangPrompts.contextBlock(surface: session.surface,
+                                                 solution: session.solution, history: session.history)
+        let user = ctx + "\n【玩家提交的还原】\n\(guess)"
+        let req = AIRequest(system: HaiguitangPrompts.guessSystem,
+                            messages: [AIMessage(role: .user, content: user)],
+                            maxTokens: 128, temperature: 0.2)
+        let parsed = await completeJSONWithRetry(req)
+        let solved = (parsed?["solved"] as? Bool) ?? false
+        let comment = (parsed?["comment"] as? String) ?? "还差点意思,再想想~"
+        if solved { session.solved = true; sessions[puzzleId] = session }
+        return GuessResult(solved: solved, comment: comment, solution: solved ? session.solution : nil)
+    }
+
+    func hint(puzzleId: String) async throws -> HintResult {
+        guard let session = sessions[puzzleId] else { throw AIError.provider(message: "not found") }
+        let ctx = HaiguitangPrompts.contextBlock(surface: session.surface,
+                                                 solution: session.solution, history: session.history)
+        let req = AIRequest(system: HaiguitangPrompts.hintSystem,
+                            messages: [AIMessage(role: .user, content: ctx)],
+                            maxTokens: 64, temperature: 0.5)
+        let parsed = await completeJSONWithRetry(req)
+        return HintResult(hint: (parsed?["hint"] as? String) ?? "再多问几个问题缩小范围吧")
+    }
+
+    func giveUp(puzzleId: String) throws -> GiveUpResult {
+        guard let session = sessions[puzzleId] else { throw AIError.provider(message: "not found") }
+        return GiveUpResult(solution: session.solution)
+    }
+
     /// 调一次,解析失败再重试一次;最终仍失败返回 nil(由调用方走安全降级默认值)。
     private func completeJSONWithRetry(_ req: AIRequest) async -> [String: Any]? {
         for _ in 0..<2 {

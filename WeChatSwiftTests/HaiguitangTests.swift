@@ -65,4 +65,43 @@ final class HaiguitangServiceTests: XCTestCase {
         do { _ = try await svc.ask(puzzleId: "nope", question: "?"); XCTFail() }
         catch {}
     }
+
+    func test_guess_solved_returnsSolution() async throws {
+        let svc = sequencedService([
+            #"{"title":"T","surface":"S","solution":"真相Z"}"#,
+            #"{"solved":true,"comment":"答对了"}"#
+        ])
+        let start = try await svc.startPuzzle(difficulty: "normal", theme: nil)
+        let g = try await svc.guess(puzzleId: start.puzzleId, guess: "我觉得是Z")
+        XCTAssertTrue(g.solved)
+        XCTAssertEqual(g.solution, "真相Z")     // 通关才下发汤底
+    }
+
+    func test_guess_notSolved_hidesSolution() async throws {
+        let svc = sequencedService([
+            #"{"title":"T","surface":"S","solution":"真相Z"}"#,
+            #"{"solved":false,"comment":"还差点"}"#
+        ])
+        let start = try await svc.startPuzzle(difficulty: "normal", theme: nil)
+        let g = try await svc.guess(puzzleId: start.puzzleId, guess: "瞎猜")
+        XCTAssertFalse(g.solved)
+        XCTAssertNil(g.solution)
+    }
+
+    func test_giveUp_returnsSolution() async throws {
+        let svc = sequencedService([#"{"title":"T","surface":"S","solution":"真相Z"}"#])
+        let start = try await svc.startPuzzle(difficulty: "normal", theme: nil)
+        let r = try await svc.giveUp(puzzleId: start.puzzleId)
+        XCTAssertEqual(r.solution, "真相Z")
+    }
+
+    func test_hint_returnsText() async throws {
+        let svc = sequencedService([
+            #"{"title":"T","surface":"S","solution":"真相Z"}"#,
+            #"{"hint":"注意他的过去"}"#
+        ])
+        let start = try await svc.startPuzzle(difficulty: "normal", theme: nil)
+        let h = try await svc.hint(puzzleId: start.puzzleId)
+        XCTAssertEqual(h.hint, "注意他的过去")
+    }
 }

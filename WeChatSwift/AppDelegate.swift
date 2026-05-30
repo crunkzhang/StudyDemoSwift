@@ -2,6 +2,7 @@ import UIKit
 import WeChatRN
 import CatonMonitorKit
 import WCIMSDK
+import ChatModule
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -19,6 +20,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         CatonMonitor.shared.start()
         // 主线程强依赖：RCTReactNativeFactory init 需主线程
         RNFactoryManager.shared.setup()
+
+        // 原生路由注册(IM 详情页改为原生)
+        ChatModule.registerRoutes()
 
         // 路由注册（syncAtStart）+ RN Bundle 热更新（afterFirstFrame）已移入调度器
         LaunchScheduler.shared.registerAll()

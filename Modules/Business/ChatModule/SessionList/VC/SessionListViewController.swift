@@ -2,6 +2,7 @@ import UIKit
 import Combine
 import SnapKit
 import WeChatUI
+import WeChatRouter
 import WCIMSDK
 
 public final class SessionListViewController: BaseViewController {
@@ -91,9 +92,11 @@ public final class SessionListViewController: BaseViewController {
 extension SessionListViewController: UITableViewDelegate {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        // Phase 1:点击只 log;详情页 Phase 2 接入
-        if let model = dataSource.itemIdentifier(for: indexPath) {
-            print("[SessionList] 点击会话: \(model.sessionId) - \(model.contactName)")
-        }
+        guard let model = dataSource.itemIdentifier(for: indexPath) else { return }
+        let encodedName = model.contactName.addingPercentEncoding(
+            withAllowedCharacters: .urlQueryAllowed
+        ) ?? ""
+        let url = "\(Routes.chatDetail)?sessionId=\(model.sessionId)&contactName=\(encodedName)"
+        Router.shared.push(url)
     }
 }

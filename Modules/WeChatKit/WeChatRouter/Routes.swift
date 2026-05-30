@@ -1,6 +1,6 @@
 public enum Routes {
     public static let rn            = "wechat://rn"
-    public static let chatDetail    = "wechat://rn?page=chat"
+    public static let chatDetail    = "wechat://chat/detail"
     public static let moments       = "wechat://rn?page=moments"
     public static let videoChannel  = "wechat://rn?page=videoChannel"
     public static let scan          = "wechat://rn?page=scan"

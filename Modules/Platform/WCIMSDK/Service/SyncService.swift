@@ -1,7 +1,8 @@
 import Foundation
 
 public protocol SyncServiceProtocol {
-    func fetchIncremental(after seqId: Int64) async throws -> SyncBatch
+    /// - Parameter force: true 时 Mock 才吐增量;false(viewDidAppear/兜底)不打扰演示
+    func fetchIncremental(after seqId: Int64, force: Bool) async throws -> SyncBatch
 }
 
 public struct SyncBatch {
@@ -19,11 +20,10 @@ public struct SyncBatch {
 public final class MockSyncService: SyncServiceProtocol {
     public init() {}
 
-    public func fetchIncremental(after seqId: Int64) async throws -> SyncBatch {
+    public func fetchIncremental(after seqId: Int64, force: Bool) async throws -> SyncBatch {
         try await Task.sleep(nanoseconds: 200_000_000)  // 200ms 模拟网络
 
         if seqId == 0 {
-            // 首次同步:吐 100 条假会话
             return SyncBatch(
                 sessions: Self.generateMockSessions(count: 100),
                 messages: [],
@@ -31,7 +31,11 @@ public final class MockSyncService: SyncServiceProtocol {
             )
         }
 
-        // 增量:随机更新 1~3 条
+        // 只有手动触发(force=true)才模拟新增量;viewDidAppear/兜底返回空 batch
+        guard force else {
+            return SyncBatch(sessions: [], messages: [], maxSeqId: seqId)
+        }
+
         let updateCount = Int.random(in: 1...3)
         let now = Int64(Date().timeIntervalSince1970)
         let sessions: [SessionModel] = (0..<updateCount).map { _ in

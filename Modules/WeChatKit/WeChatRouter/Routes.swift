@@ -8,7 +8,8 @@ public enum Routes {
     public static let nearby        = "wechat://rn?page=nearby"
     public static let shopping      = "wechat://rn?page=shopping"
     public static let search        = "wechat://rn?page=search"
-    public static let game          = "wechat://rn?page=gameCenter"
+    public static let game          = "wechat://game/hall"
+    public static let gameRun       = "wechat://game/run"
     public static let settings      = "wechat://rn?page=settings"
     public static let debugHome     = "wechat://rn?page=debugHome"
 

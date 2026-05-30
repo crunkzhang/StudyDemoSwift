@@ -3,6 +3,7 @@ import WeChatRN
 import CatonMonitorKit
 import WCIMSDK
 import ChatModule
+import GameModule
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -23,6 +24,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // 原生路由注册(IM 详情页改为原生)
         ChatModule.registerRoutes()
+
+        // 游戏中心：路由注册 + manifest 后台拉取(30min 轮询)
+        GameModule.registerRoutes()
+        GameBundleManager.shared.start(
+            remoteURL: "https://cz-rn-bundle.oss-cn-hangzhou.aliyuncs.com/games/manifest.json"
+        )
 
         // 路由注册（syncAtStart）+ RN Bundle 热更新（afterFirstFrame）已移入调度器
         LaunchScheduler.shared.registerAll()

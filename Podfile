@@ -41,10 +41,12 @@ target 'WeChatSwift' do
   pod 'ContactModule',  :path => 'Modules/Business/ContactModule'
   pod 'DiscoverModule', :path => 'Modules/Business/DiscoverModule'
   pod 'MeModule',       :path => 'Modules/Business/MeModule'
+  pod 'GameModule',     :path => 'Modules/Business/GameModule'
 
   # ── 三方库 ──
   pod 'SnapKit'
   pod 'SDWebImage'
+  pod 'ZIPFoundation'
 
   # ── RN ──
   use_react_native!(:path => rn_path, :app_path => rn_project)
@@ -97,7 +99,7 @@ post_install do |installer|
   group_map = {
     'Platform'   => %w[WeChatUI WeChatRouter WeChatNetAPI WeChatRN WCIMSDK],
     'Foundation' => %w[ExtensionKit NavigateKit DDNetwork CatonMonitorKit],
-    'Business'   => %w[ChatModule ContactModule DiscoverModule MeModule],
+    'Business'   => %w[ChatModule ContactModule DiscoverModule MeModule GameModule],
   }
   own_pods = group_map.values.flatten
   pods_proj = installer.pods_project

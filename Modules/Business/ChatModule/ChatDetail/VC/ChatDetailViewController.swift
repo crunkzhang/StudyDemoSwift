@@ -154,7 +154,7 @@ extension ChatDetailViewController: UITableViewDelegate {
         guard indexPath.row < messages.count else { return }
         let model = messages[indexPath.row]
         if model.status == .failed {
-            Task { await logic.retry(model.localMsgId) }
+            logic.retry(model.localMsgId)
         }
     }
 
@@ -170,6 +170,6 @@ extension ChatDetailViewController: UITableViewDelegate {
 
 extension ChatDetailViewController: ChatInputBarDelegate {
     public func inputBarDidSend(_ text: String) {
-        Task { await logic.send(text) }
+        logic.send(text)
     }
 }

@@ -48,12 +48,13 @@ public final class ChatDetailLogic {
 
     // MARK: - 命令
 
-    public func send(_ text: String) async {
-        await sender.send(text: text)
+    /// 同步入口 — 写 DB sending 立刻返回,UI 即时刷新;上行后台 actor 串行跑。
+    public func send(_ text: String) {
+        sender.send(text: text)
     }
 
-    public func retry(_ localMsgId: String) async {
-        await sender.retry(localMsgId: localMsgId)
+    public func retry(_ localMsgId: String) {
+        sender.retry(localMsgId: localMsgId)
     }
 
     /// 标该会话所有消息为已读 — VC viewDidAppear 调用,

@@ -17,7 +17,25 @@ final class MessageDBHandler {
 
     func fetchPage(beforeSeqId: Int64? = nil, limit: Int = 50) -> [MessageCellModel] {
         let raw = db.fetchPage(sessionId: sessionId, beforeSeqId: beforeSeqId, limit: limit)
-        let models = Array(raw.reversed().map(toCellModel))
+
+        // 混合排序:
+        // 1. 已 ACK 消息(seqId > 0) → 按 seqId 升序(服务端保证单调递增)
+        // 2. pending 消息(seqId = 0,server 未分配) → 排到尾部,按 timestamp 升序(发送顺序)
+        // ACK 回填后 seqId 由 0 变成 server 分配的新 max,自然归位到序列末尾,
+        // 视觉上"还是在最底下",顺序稳定不闪。
+        let sortedRaw = raw.sorted { lhs, rhs in
+            let lHasSeq = lhs.seqId > 0
+            let rHasSeq = rhs.seqId > 0
+            if lHasSeq != rHasSeq {
+                return lHasSeq                       // 有 seqId 的在前,pending 在后
+            }
+            if lHasSeq {
+                return lhs.seqId < rhs.seqId         // 都有 seqId → 按 seqId 升序
+            }
+            return lhs.timestamp < rhs.timestamp     // 都没 seqId → 按发送时间升序
+        }
+
+        let models = sortedRaw.map(toCellModel)
         // 后台批量预算高度,主线程零计算
         DispatchQueue.global(qos: .userInitiated).async { [renderCache] in
             Self.precalculate(models: models, cache: renderCache)

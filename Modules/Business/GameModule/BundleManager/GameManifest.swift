@@ -24,12 +24,15 @@ public struct GameEntry: Codable {
     public let size: Int
     /// 游戏背景色 hex(如 "#FAF8EF"),用于 Runner 容器底色,避免 H5 加载空隙黑屏
     public let backgroundColor: String?
+    /// 游戏需要的原生能力,如 ["bridge"](需 JS Bridge 调用原生 AI);nil 表示纯 web 游戏
+    public let capabilities: [String]?
     public let grayscale: Grayscale?
 
     public init(id: String, title: String, subtitle: String? = nil,
                 icon: String, version: String,
                 url: String, sha256: String, size: Int,
-                backgroundColor: String? = nil, grayscale: Grayscale? = nil) {
+                backgroundColor: String? = nil, capabilities: [String]? = nil,
+                grayscale: Grayscale? = nil) {
         self.id = id
         self.title = title
         self.subtitle = subtitle
@@ -39,6 +42,7 @@ public struct GameEntry: Codable {
         self.sha256 = sha256
         self.size = size
         self.backgroundColor = backgroundColor
+        self.capabilities = capabilities
         self.grayscale = grayscale
     }
 }

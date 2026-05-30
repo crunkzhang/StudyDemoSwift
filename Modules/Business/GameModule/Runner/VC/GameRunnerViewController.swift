@@ -16,6 +16,8 @@ public final class GameRunnerViewController: BaseViewController, PageRoutable {
 
     private let gameId: String
     private let webView: WKWebView
+    /// L2:声明 bridge 能力的游戏,持有 Bridge 避免被释放
+    private var gameBridge: GameBridge?
 
     private let loadingView = UIActivityIndicatorView(style: .large)
     private let loadingLabel: UILabel = {
@@ -108,6 +110,14 @@ public final class GameRunnerViewController: BaseViewController, PageRoutable {
             make.bottom.equalToSuperview()
         }
         retryButton.addTarget(self, action: #selector(retryTapped), for: .touchUpInside)
+
+        // L2:需要 bridge 能力的游戏(如海龟汤),注册 JS Bridge 调用原生 AI
+        if game?.capabilities?.contains("bridge") == true {
+            let bridge = GameBridge(webView: webView)
+            bridge.register(handler: AIBridgeHandler())
+            webView.configuration.userContentController.add(bridge, name: GameBridge.messageHandlerName)
+            self.gameBridge = bridge
+        }
 
         Task { await loadGame() }
     }

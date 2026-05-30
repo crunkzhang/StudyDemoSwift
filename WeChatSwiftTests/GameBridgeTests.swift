@@ -41,4 +41,15 @@ final class GameBridgeTests: XCTestCase {
         guard case .failure(let code, _) = result else { return XCTFail() }
         XCTAssertEqual(code, "NO_HANDLER")
     }
+
+    func test_decode_capabilities() throws {
+        let json = """
+        { "manifestVersion":1,"updatedAt":"x","games":[{
+          "id":"haiguitang","title":"海龟汤","icon":"x","version":"1.0",
+          "url":"x","sha256":"x","size":1,"capabilities":["bridge"]
+        }]}
+        """.data(using: .utf8)!
+        let m = try JSONDecoder().decode(GameManifest.self, from: json)
+        XCTAssertEqual(m.games[0].capabilities, ["bridge"])
+    }
 }

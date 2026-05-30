@@ -4,6 +4,7 @@ import CatonMonitorKit
 import WCIMSDK
 import ChatModule
 import GameModule
+import AIKit
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -30,6 +31,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         GameBundleManager.shared.start(
             remoteURL: "https://cz-rn-bundle.oss-cn-hangzhou.aliyuncs.com/games/manifest.json"
         )
+
+        // AI 能力(海龟汤等)provider 装配
+        // DEBUG:本地代理蹭 Max(localhost:8787),无代理时改 .mock 兜底
+        // RELEASE:直连 Anthropic,key 走 Keychain
+        #if DEBUG
+        AIConfig.install(.claudeProxy(baseURL: URL(string: "http://localhost:8787")!))
+        #else
+        AIConfig.install(.claudeDirect(apiKey: KeychainAIKey.load() ?? ""))
+        #endif
 
         // 路由注册（syncAtStart）+ RN Bundle 热更新（afterFirstFrame）已移入调度器
         LaunchScheduler.shared.registerAll()

@@ -68,8 +68,7 @@ public final class SessionListViewController: BaseViewController {
     #if DEBUG
     @objc private func wipeAndReload() {
         WCIMSDK.clearLocalData()
-        // 通知 logic 重新读 DB(此时全空 → UI 变空白列表)
-        DBChangeStream.shared.publish(session: .delete([]))
+        logic.reloadFromDB()  // DB 已空 → UI 立刻变空白列表
         print("[Debug] 🗑️ 已清空。点 🔄 每次会带 1~3 条新消息进来")
     }
     #endif

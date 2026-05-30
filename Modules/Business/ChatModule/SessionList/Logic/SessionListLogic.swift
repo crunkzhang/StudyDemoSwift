@@ -43,6 +43,11 @@ public final class SessionListLogic {
         await WCIMSDK.syncCoordinator?.triggerSync(force: force)
     }
 
+    /// 强制从 DB 全量重读(DEBUG 清库后让 UI 立刻变空白)
+    public func reloadFromDB() {
+        loadAndSort()
+    }
+
     // MARK: - Private
 
     private func handleChange(_ event: SessionChangeEvent) {

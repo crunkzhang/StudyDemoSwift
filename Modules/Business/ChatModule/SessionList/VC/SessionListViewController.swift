@@ -42,9 +42,12 @@ public final class SessionListViewController: BaseViewController {
         tableView.snp.makeConstraints { $0.edges.equalToSuperview() }
         _ = dataSource
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "🔄", style: .plain, target: self, action: #selector(manualSync)
-        )
+        navigationItem.rightBarButtonItems = [
+            UIBarButtonItem(title: "🔄", style: .plain, target: self, action: #selector(manualSync)),
+            #if DEBUG
+            UIBarButtonItem(title: "🗑️", style: .plain, target: self, action: #selector(wipeAndReload)),
+            #endif
+        ].compactMap { $0 }
 
         bind()
         logic.start()
@@ -58,6 +61,19 @@ public final class SessionListViewController: BaseViewController {
     @objc private func manualSync() {
         Task { await logic.triggerRemoteSync(force: true) }
     }
+
+    #if DEBUG
+    @objc private func wipeAndReload() {
+        // 清空本地 IM 数据 + 重新 setup + 首次 sync
+        let userId = WCIMSDK.currentUserId.isEmpty ? "mock_local_user" : WCIMSDK.currentUserId
+        WCIMSDK.clearLocalData(userId: userId)
+        WCIMSDK.setup(userId: userId)
+        logic.stop()
+        logic.start()
+        Task { await logic.triggerRemoteSync() }
+        print("[Debug] 🗑️ 本地 IM 数据已清空,重新拉取 100 会话")
+    }
+    #endif
 
     private func bind() {
         logic.$sessions

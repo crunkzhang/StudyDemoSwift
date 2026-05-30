@@ -28,4 +28,20 @@ public enum WCIMSDK {
         )
         pushService = MockPushService()
     }
+
+    /// 清空当前用户的 IM 本地数据(DB 文件 + seqId)。DEBUG 用于重置 demo 状态。
+    /// 调用后必须重新 setup(userId:) 才能继续使用。
+    public static func clearLocalData(userId: String) {
+        let dir = DBPaths.userIMDirectory(userId: userId)
+        try? FileManager.default.removeItem(at: dir)
+        UserDefaults.standard.removeObject(forKey: "im.seqId.\(userId)")
+
+        currentUserId = ""
+        sessionDB = nil
+        messageDB = nil
+        tableRegistry = nil
+        seqIdManager = nil
+        syncCoordinator = nil
+        pushService = nil
+    }
 }

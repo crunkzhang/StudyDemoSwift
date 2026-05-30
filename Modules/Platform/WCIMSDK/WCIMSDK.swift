@@ -29,19 +29,26 @@ public enum WCIMSDK {
         pushService = MockPushService()
     }
 
-    /// 清空当前用户的 IM 本地数据(DB 文件 + seqId)。DEBUG 用于重置 demo 状态。
-    /// 调用后必须重新 setup(userId:) 才能继续使用。
-    public static func clearLocalData(userId: String) {
-        let dir = DBPaths.userIMDirectory(userId: userId)
-        try? FileManager.default.removeItem(at: dir)
-        UserDefaults.standard.removeObject(forKey: "im.seqId.\(userId)")
+    /// 清空当前用户的 IM 本地数据(DEBUG 用)。
+    /// 不销毁 DB 实例 — 业务侧 logic 持有的 db 引用仍然有效;
+    /// 只清表数据 + seqId + 重建 syncCoordinator(它持有旧 seqIdManager)。
+    public static func clearLocalData() {
+        try? sessionDB?.wipeAll()
+        try? messageDB?.wipeAll()
+        tableRegistry = MessageTableNameRegistry()   // 表名缓存清掉
 
-        currentUserId = ""
-        sessionDB = nil
-        messageDB = nil
-        tableRegistry = nil
-        seqIdManager = nil
-        syncCoordinator = nil
-        pushService = nil
+        let key = "im.seqId.\(currentUserId)"
+        UserDefaults.standard.removeObject(forKey: key)
+
+        // 重建 seqIdManager(从空 UserDefaults 读到 0)+ 重建 syncCoordinator(持有 seqIdManager 引用)
+        guard let sdb = sessionDB, let mdb = messageDB else { return }
+        let seq = SeqIdManager(userId: currentUserId)
+        seqIdManager = seq
+        syncCoordinator = SyncCoordinator(
+            service: MockSyncService(),
+            sessionDB: sdb,
+            messageDB: mdb,
+            seqIdManager: seq
+        )
     }
 }

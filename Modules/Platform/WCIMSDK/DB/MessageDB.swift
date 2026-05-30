@@ -76,6 +76,17 @@ public final class MessageDB {
         try db.run(transaction: { _ in try block() })
     }
 
+    /// 清空所有消息表(DEBUG 用)。DROP 已知表 + 清空 created 缓存。
+    public func wipeAll() throws {
+        lock.lock()
+        let tables = createdTables
+        createdTables.removeAll()
+        lock.unlock()
+        for t in tables {
+            try? db.drop(table: t)
+        }
+    }
+
     // MARK: - 私有
 
     private func ensureTable(_ name: String) throws {

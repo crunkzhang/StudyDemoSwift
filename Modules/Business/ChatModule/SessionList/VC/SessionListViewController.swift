@@ -67,14 +67,12 @@ public final class SessionListViewController: BaseViewController {
 
     #if DEBUG
     @objc private func wipeAndReload() {
-        // 清空本地 IM 数据 + 重新 setup + 首次 sync
-        let userId = WCIMSDK.currentUserId.isEmpty ? "mock_local_user" : WCIMSDK.currentUserId
-        WCIMSDK.clearLocalData(userId: userId)
-        WCIMSDK.setup(userId: userId)
-        logic.stop()
-        logic.start()
+        WCIMSDK.clearLocalData()
+        // 触发 DB 变更让 logic 重新加载(此时 DB 已空,UI 立刻空白)
+        DBChangeStream.shared.publish(session: .delete([]))
+        // 再触发一次 sync — seqId=0 → bootstrapBatch 重拉 100 会话 + 历史消息
         Task { await logic.triggerRemoteSync() }
-        print("[Debug] 🗑️ 本地 IM 数据已清空,重新拉取 100 会话")
+        print("[Debug] 🗑️ 本地数据已清空,正在重新同步")
     }
     #endif
 

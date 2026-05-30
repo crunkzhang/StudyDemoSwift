@@ -30,25 +30,12 @@ public enum WCIMSDK {
     }
 
     /// 清空当前用户的 IM 本地数据(DEBUG 用)。
-    /// 不销毁 DB 实例 — 业务侧 logic 持有的 db 引用仍然有效;
-    /// 只清表数据 + seqId + 重建 syncCoordinator(它持有旧 seqIdManager)。
+    /// 不销毁 DB 实例(业务侧 logic 持有的引用仍然有效),也不重置 seqId —
+    /// 这样下次手动 sync 不会触发首次 bootstrap 灌入 100 会话,而是按增量
+    /// 路径每次只来 1~3 条新消息。
     public static func clearLocalData() {
         try? sessionDB?.wipeAll()
         try? messageDB?.wipeAll()
-        tableRegistry = MessageTableNameRegistry()   // 表名缓存清掉
-
-        let key = "im.seqId.\(currentUserId)"
-        UserDefaults.standard.removeObject(forKey: key)
-
-        // 重建 seqIdManager(从空 UserDefaults 读到 0)+ 重建 syncCoordinator(持有 seqIdManager 引用)
-        guard let sdb = sessionDB, let mdb = messageDB else { return }
-        let seq = SeqIdManager(userId: currentUserId)
-        seqIdManager = seq
-        syncCoordinator = SyncCoordinator(
-            service: MockSyncService(),
-            sessionDB: sdb,
-            messageDB: mdb,
-            seqIdManager: seq
-        )
+        tableRegistry = MessageTableNameRegistry()
     }
 }

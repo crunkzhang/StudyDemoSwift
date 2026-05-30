@@ -68,11 +68,9 @@ public final class SessionListViewController: BaseViewController {
     #if DEBUG
     @objc private func wipeAndReload() {
         WCIMSDK.clearLocalData()
-        // 触发 DB 变更让 logic 重新加载(此时 DB 已空,UI 立刻空白)
+        // 通知 logic 重新读 DB(此时全空 → UI 变空白列表)
         DBChangeStream.shared.publish(session: .delete([]))
-        // 再触发一次 sync — seqId=0 → bootstrapBatch 重拉 100 会话 + 历史消息
-        Task { await logic.triggerRemoteSync() }
-        print("[Debug] 🗑️ 本地数据已清空,正在重新同步")
+        print("[Debug] 🗑️ 已清空。点 🔄 每次会带 1~3 条新消息进来")
     }
     #endif
 

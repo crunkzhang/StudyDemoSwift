@@ -9,6 +9,8 @@ public final class SessionListViewController: BaseViewController {
 
     private enum Section { case main }
 
+    // MARK: - Views
+
     private lazy var tableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .plain)
         tv.delegate = self
@@ -30,28 +32,41 @@ public final class SessionListViewController: BaseViewController {
         }
     }()
 
+    private lazy var refreshControl: UIRefreshControl = {
+        let rc = UIRefreshControl()
+        rc.addTarget(self, action: #selector(handlePullToRefresh), for: .valueChanged)
+        return rc
+    }()
+
+    private lazy var emptyView: UIView = {
+        let container = UIView()
+        let label = UILabel()
+        label.text = "暂无会话\n点右上角 🔄 拉一条试试"
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.font = .systemFont(ofSize: 15)
+        label.textColor = UIColor(white: 0.55, alpha: 1)
+        container.addSubview(label)
+        label.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.leading.greaterThanOrEqualToSuperview().offset(40)
+            make.trailing.lessThanOrEqualToSuperview().offset(-40)
+        }
+        return container
+    }()
+
+    // MARK: - State
+
     private let logic = SessionListLogic()
     private var cancellables = Set<AnyCancellable>()
 
+    // MARK: - Lifecycle
+
     public override func viewDidLoad() {
         super.viewDidLoad()
-        title = "微信"
-        view.backgroundColor = UIColor(white: 0.97, alpha: 1)
-
-        view.addSubview(tableView)
-        tableView.snp.makeConstraints { $0.edges.equalToSuperview() }
-        _ = dataSource
-
-        var rightItems: [UIBarButtonItem] = [
-            UIBarButtonItem(title: "🔄", style: .plain, target: self, action: #selector(manualSync))
-        ]
-        #if DEBUG
-        rightItems.append(
-            UIBarButtonItem(title: "🗑️", style: .plain, target: self, action: #selector(wipeAndReload))
-        )
-        #endif
-        navigationItem.rightBarButtonItems = rightItems
-
+        setupAppearance()
+        setupTableView()
+        setupNavigationBar()
         bind()
         logic.start()
     }
@@ -61,28 +76,62 @@ public final class SessionListViewController: BaseViewController {
         Task { await logic.triggerRemoteSync() }
     }
 
+    // MARK: - Setup
+
+    private func setupAppearance() {
+        title = "微信"
+        view.backgroundColor = UIColor(white: 0.97, alpha: 1)
+    }
+
+    private func setupTableView() {
+        view.addSubview(tableView)
+        tableView.snp.makeConstraints { $0.edges.equalToSuperview() }
+        tableView.refreshControl = refreshControl
+        _ = dataSource  // 触发懒加载,绑定 tableView
+    }
+
+    private func setupNavigationBar() {
+        var rightItems: [UIBarButtonItem] = [
+            UIBarButtonItem(title: "🔄", style: .plain, target: self, action: #selector(manualSync))
+        ]
+        #if DEBUG
+        rightItems.append(contentsOf: debugBarItems)
+        #endif
+        navigationItem.rightBarButtonItems = rightItems
+    }
+
+    // MARK: - Actions
+
     @objc private func manualSync() {
         Task { await logic.triggerRemoteSync(force: true) }
     }
 
-    #if DEBUG
-    @objc private func wipeAndReload() {
-        WCIMSDK.clearLocalData()
-        logic.reloadFromDB()  // DB 已空 → UI 立刻变空白列表
-        print("[Debug] 🗑️ 已清空。点 🔄 每次会带 1~3 条新消息进来")
+    @objc private func handlePullToRefresh() {
+        Task {
+            await logic.triggerRemoteSync(force: true)
+            // 至少转 0.3s,体验更自然(避免一闪而过)
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            await MainActor.run { self.refreshControl.endRefreshing() }
+        }
     }
-    #endif
+
+    // MARK: - Binding
 
     private func bind() {
         logic.$sessions
             .receive(on: DispatchQueue.main)
             .sink { [weak self] sessions in
                 self?.applySnapshot(sessions)
+                self?.updateEmptyView(isEmpty: sessions.isEmpty)
             }
             .store(in: &cancellables)
     }
 
-    /// 关键:DiffableDataSource diff + iOS 15 reconfigureItems 让屏幕上的 cell 原地刷,
+    private func updateEmptyView(isEmpty: Bool) {
+        tableView.backgroundView = isEmpty ? emptyView : nil
+    }
+
+    /// DiffableDataSource diff + iOS 15 reconfigureItems 让屏幕上的 cell 原地刷,
     /// 不走 dequeue,头像不重下、滚动不跳。
     private func applySnapshot(_ models: [SessionCellModel]) {
         var snap = NSDiffableDataSourceSnapshot<Section, SessionCellModel>()
@@ -103,6 +152,8 @@ public final class SessionListViewController: BaseViewController {
     }
 }
 
+// MARK: - UITableViewDelegate
+
 extension SessionListViewController: UITableViewDelegate {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
@@ -114,3 +165,19 @@ extension SessionListViewController: UITableViewDelegate {
         Router.shared.push(url)
     }
 }
+
+// MARK: - Debug (P2-11 集中所有 DEBUG-only 代码)
+
+#if DEBUG
+private extension SessionListViewController {
+    var debugBarItems: [UIBarButtonItem] {
+        [UIBarButtonItem(title: "🗑️", style: .plain, target: self, action: #selector(wipeAndReload))]
+    }
+
+    @objc func wipeAndReload() {
+        WCIMSDK.clearLocalData()
+        logic.reloadFromDB()
+        print("[Debug] 🗑️ 已清空。点 🔄 / 下拉刷新每次会带 1~3 条新消息进来")
+    }
+}
+#endif

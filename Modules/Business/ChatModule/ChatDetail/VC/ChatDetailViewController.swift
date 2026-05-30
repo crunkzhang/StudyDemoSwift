@@ -45,7 +45,9 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        // 与 inputBar 同色 — tableView 自己白底覆盖此色,只在 inputBar 下方
+        // (home indicator 那一条)透出,视觉上消除"白底分隔"。
+        view.backgroundColor = ChatInputBar.barColor
         view.addSubview(tableView)
         view.addSubview(inputBar)
         inputBar.delegate = self

@@ -27,9 +27,12 @@ public final class ChatInputBar: UIView {
         return b
     }()
 
+    /// 输入栏背景色 — VC 设 view.backgroundColor 同色,避免键盘收起时 home indicator 那条露白。
+    public static let barColor = UIColor(white: 0.97, alpha: 1)
+
     public override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = UIColor(white: 0.97, alpha: 1)
+        backgroundColor = Self.barColor
         addSubview(textField)
         addSubview(sendButton)
 

@@ -16,10 +16,9 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
         return ChatDetailViewController(sessionId: sessionId, contactName: name)
     }
 
-    private enum Section { case main }
-
     private lazy var tableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .plain)
+        tv.dataSource = self
         tv.delegate = self
         tv.register(TextMessageCell.self, forCellReuseIdentifier: TextMessageCell.reuseID)
         tv.separatorStyle = .none
@@ -30,17 +29,12 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
         return tv
     }()
 
-    private lazy var dataSource: UITableViewDiffableDataSource<Section, MessageCellModel> = {
-        UITableViewDiffableDataSource(tableView: tableView) { tv, ip, m in
-            let cell = tv.dequeueReusableCell(withIdentifier: TextMessageCell.reuseID, for: ip) as! TextMessageCell
-            cell.configure(m)
-            return cell
-        }
-    }()
-
     private let inputBar = ChatInputBar()
     private let logic: ChatDetailLogic
     private var cancellables = Set<AnyCancellable>()
+
+    /// 当前数据源(主线程访问)
+    private var messages: [MessageCellModel] = []
 
     public init(sessionId: String, contactName: String) {
         self.logic = ChatDetailLogic(sessionId: sessionId, contactName: contactName)
@@ -66,7 +60,6 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
             make.height.equalTo(52)
         }
 
-        _ = dataSource
         bind()
         logic.start()
     }
@@ -78,61 +71,86 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
     private func bind() {
         logic.$messages
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] messages in
-                self?.apply(messages)
+            .sink { [weak self] newMessages in
+                self?.apply(newMessages)
             }
             .store(in: &cancellables)
     }
 
-    private func apply(_ models: [MessageCellModel]) {
-        var snap = NSDiffableDataSourceSnapshot<Section, MessageCellModel>()
-        snap.appendSections([.main])
-        snap.appendItems(models, toSection: .main)
+    /// 简单 id-keyed diff:
+    /// - 同一组 id 集合 → 只是 status 变化,逐条 reloadRows 不动滚动
+    /// - 集合变化(新消息/删除)→ reloadData + 滚到底
+    private func apply(_ newMessages: [MessageCellModel]) {
+        let oldKeys = Set(messages.map(\.localMsgId))
+        let newKeys = Set(newMessages.map(\.localMsgId))
 
-        // 内容变更走 reconfigureItems(iOS 15+,不走 dequeue)
-        let old = dataSource.snapshot()
-        let oldByKey = Dictionary(uniqueKeysWithValues: old.itemIdentifiers.map { ($0.localMsgId, $0) })
-        let toReconfigure = models.filter { new in
-            if let oldM = oldByKey[new.localMsgId], oldM != new { return true }
-            return false
-        }
-        if !toReconfigure.isEmpty {
-            snap.reconfigureItems(toReconfigure)
-        }
-
-        dataSource.apply(snap, animatingDifferences: true) { [weak self] in
-            self?.scrollToBottomIfNeeded(count: models.count)
+        if oldKeys == newKeys && oldKeys.count == newMessages.count {
+            // 只有内容变(发送 sending→sent / failed),逐条 reloadRows
+            let oldByKey = Dictionary(uniqueKeysWithValues: messages.map { ($0.localMsgId, $0) })
+            let changedIndices = newMessages.enumerated().compactMap { i, m -> Int? in
+                guard let oldM = oldByKey[m.localMsgId], oldM != m else { return nil }
+                return i
+            }
+            messages = newMessages
+            if !changedIndices.isEmpty {
+                tableView.reloadRows(
+                    at: changedIndices.map { IndexPath(row: $0, section: 0) },
+                    with: .none
+                )
+            }
+        } else {
+            // 有增删,全量 reload + 滚到底
+            messages = newMessages
+            tableView.reloadData()
+            scrollToBottomIfNeeded()
         }
     }
 
-    private func scrollToBottomIfNeeded(count: Int) {
-        guard count > 0 else { return }
-        let ip = IndexPath(row: count - 1, section: 0)
+    private func scrollToBottomIfNeeded() {
+        guard !messages.isEmpty else { return }
+        let ip = IndexPath(row: messages.count - 1, section: 0)
         tableView.scrollToRow(at: ip, at: .bottom, animated: true)
     }
 }
 
-extension ChatDetailViewController: ChatInputBarDelegate {
-    public func inputBarDidSend(_ text: String) {
-        Task { await logic.send(text) }
+// MARK: - UITableViewDataSource
+
+extension ChatDetailViewController: UITableViewDataSource {
+    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        messages.count
+    }
+
+    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: TextMessageCell.reuseID, for: indexPath) as! TextMessageCell
+        cell.configure(messages[indexPath.row])
+        return cell
     }
 }
+
+// MARK: - UITableViewDelegate
 
 extension ChatDetailViewController: UITableViewDelegate {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        guard let model = dataSource.itemIdentifier(for: indexPath) else { return }
+        guard indexPath.row < messages.count else { return }
+        let model = messages[indexPath.row]
         if model.status == .failed {
             Task { await logic.retry(model.localMsgId) }
         }
     }
 
     /// 滚动主线程零计算 — 高度直接读 MessageRenderCache(后台预算好)。
-    /// Cache miss(刚到达还没预算)走 automaticDimension 兜底。
     public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        guard let model = dataSource.itemIdentifier(for: indexPath) else {
-            return UITableView.automaticDimension
-        }
+        guard indexPath.row < messages.count else { return UITableView.automaticDimension }
+        let model = messages[indexPath.row]
         return logic.renderCache.height(for: model.localMsgId) ?? UITableView.automaticDimension
+    }
+}
+
+// MARK: - ChatInputBarDelegate
+
+extension ChatDetailViewController: ChatInputBarDelegate {
+    public func inputBarDidSend(_ text: String) {
+        Task { await logic.send(text) }
     }
 }

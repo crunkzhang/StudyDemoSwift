@@ -45,4 +45,9 @@ public final class SessionDB {
             try block()
         })
     }
+
+    /// 清空所有会话(DEBUG 用)— 不动 DB 实例,只清表内数据。
+    public func wipeAll() throws {
+        try db.delete(fromTable: table)
+    }
 }

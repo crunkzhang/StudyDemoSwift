@@ -25,4 +25,20 @@ final class GameBridgeTests: XCTestCase {
         guard case .failure(let code, _) = result else { return XCTFail("应失败") }
         XCTAssertEqual(code, "UNKNOWN_METHOD")
     }
+
+    func test_bridge_dispatchesToRegisteredHandler() async {
+        let h = handler([#"{"title":"T","surface":"汤面X","solution":"Y"}"#])
+        let bridge = GameBridge()
+        bridge.register(handler: h)
+        let result = await bridge.resolve(method: "ai.startPuzzle", params: ["difficulty": "normal"])
+        guard case .success(let data) = result else { return XCTFail() }
+        XCTAssertEqual(data["surface"] as? String, "汤面X")
+    }
+
+    func test_bridge_noHandler_returnsFailure() async {
+        let bridge = GameBridge()
+        let result = await bridge.resolve(method: "im.share", params: [:])
+        guard case .failure(let code, _) = result else { return XCTFail() }
+        XCTAssertEqual(code, "NO_HANDLER")
+    }
 }

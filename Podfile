@@ -33,6 +33,7 @@ target 'WeChatSwift' do
   pod 'WeChatUI',       :path => 'Modules/WeChatKit/WeChatUI'
   pod 'WeChatRouter',   :path => 'Modules/WeChatKit/WeChatRouter'
   pod 'WeChatNetAPI',   :path => 'Modules/WeChatKit/WeChatNetAPI'
+  pod 'AIKit',          :path => 'Modules/WeChatKit/AIKit'
   pod 'WeChatRN',       :path => 'Modules/WeChatKit/WeChatRN'
   pod 'WCIMSDK',        :path => 'Modules/Platform/WCIMSDK'
 

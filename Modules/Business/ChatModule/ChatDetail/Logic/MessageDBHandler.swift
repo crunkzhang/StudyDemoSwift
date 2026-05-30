@@ -1,21 +1,28 @@
-import Foundation
+import UIKit
 import WCIMSDK
 
 final class MessageDBHandler {
     private let db: MessageDB
     private let sessionId: String
     private let myUserId: String
+    private let renderCache: MessageRenderCache
 
-    init(db: MessageDB, sessionId: String, myUserId: String) {
+    init(db: MessageDB, sessionId: String, myUserId: String,
+         renderCache: MessageRenderCache) {
         self.db = db
         self.sessionId = sessionId
         self.myUserId = myUserId
+        self.renderCache = renderCache
     }
 
     func fetchPage(beforeSeqId: Int64? = nil, limit: Int = 50) -> [MessageCellModel] {
         let raw = db.fetchPage(sessionId: sessionId, beforeSeqId: beforeSeqId, limit: limit)
-        // DB 返回是 seqId 倒序(最新在前),UI 显示要时间正序,反一下
-        return raw.reversed().map(toCellModel)
+        let models = Array(raw.reversed().map(toCellModel))
+        // 后台批量预算高度,主线程零计算
+        DispatchQueue.global(qos: .userInitiated).async { [renderCache] in
+            Self.precalculate(models: models, cache: renderCache)
+        }
+        return models
     }
 
     func toCellModel(_ m: MessageModel) -> MessageCellModel {
@@ -31,5 +38,30 @@ final class MessageDBHandler {
             timestamp: m.timestamp,
             status: MessageStatus(rawValue: m.status) ?? .received
         )
+    }
+
+    // MARK: - 高度预算
+
+    /// 必须和 TextMessageCell 的布局保持一致:气泡 maxWidth=260,内 padding 12+12,
+    /// 文字 16pt,上下气泡间距 12(top 6 + bottom 6)。
+    private static let bubbleMaxWidth: CGFloat = 260
+    private static let bubbleHPadding: CGFloat = 12 + 12
+    private static let bubbleVPadding: CGFloat = 10 + 10
+    private static let rowVMargin: CGFloat = 6 + 6
+    private static let textFont = UIFont.systemFont(ofSize: 16)
+
+    private static func precalculate(models: [MessageCellModel], cache: MessageRenderCache) {
+        let contentWidth = bubbleMaxWidth - bubbleHPadding
+        for m in models {
+            guard cache.height(for: m.localMsgId) == nil else { continue }
+            let rect = (m.text as NSString).boundingRect(
+                with: CGSize(width: contentWidth, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                attributes: [.font: textFont],
+                context: nil
+            )
+            let height = ceil(rect.height) + bubbleVPadding + rowVMargin
+            cache.cache(height: height, attributedText: nil, for: m.localMsgId)
+        }
     }
 }

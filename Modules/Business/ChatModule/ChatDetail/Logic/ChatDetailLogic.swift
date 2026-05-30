@@ -6,6 +6,7 @@ import WCIMSDK
 /// 协调 MessageDBHandler / MessageDBObserver / SendMsgHandler。
 public final class ChatDetailLogic {
     @Published public private(set) var messages: [MessageCellModel] = []
+    public let renderCache = MessageRenderCache()
 
     public let sessionId: String
     public let contactName: String
@@ -21,7 +22,11 @@ public final class ChatDetailLogic {
         }
         self.sessionId = sessionId
         self.contactName = contactName
-        self.handler = MessageDBHandler(db: db, sessionId: sessionId, myUserId: WCIMSDK.currentUserId)
+        self.handler = MessageDBHandler(
+            db: db, sessionId: sessionId,
+            myUserId: WCIMSDK.currentUserId,
+            renderCache: renderCache
+        )
         self.observer = MessageDBObserver(sessionId: sessionId)
         self.sender = SendMsgHandler(sessionId: sessionId, myUserId: WCIMSDK.currentUserId)
     }

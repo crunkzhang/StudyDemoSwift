@@ -126,4 +126,13 @@ extension ChatDetailViewController: UITableViewDelegate {
             Task { await logic.retry(model.localMsgId) }
         }
     }
+
+    /// 滚动主线程零计算 — 高度直接读 MessageRenderCache(后台预算好)。
+    /// Cache miss(刚到达还没预算)走 automaticDimension 兜底。
+    public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        guard let model = dataSource.itemIdentifier(for: indexPath) else {
+            return UITableView.automaticDimension
+        }
+        return logic.renderCache.height(for: model.localMsgId) ?? UITableView.automaticDimension
+    }
 }

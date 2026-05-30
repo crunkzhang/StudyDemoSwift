@@ -30,6 +30,18 @@ final class MockProviderTests: XCTestCase {
     }
 }
 
+final class AIClientTests: XCTestCase {
+    func test_client_usesCurrentProvider_andCanSwitch() async throws {
+        let client = AIClient(provider: MockProvider { _ in .success(AIResponse(text: "A")) })
+        let r1 = try await client.complete(AIRequest(system: "", messages: []))
+        XCTAssertEqual(r1.text, "A")
+
+        client.setProvider(MockProvider { _ in .success(AIResponse(text: "B")) })
+        let r2 = try await client.complete(AIRequest(system: "", messages: []))
+        XCTAssertEqual(r2.text, "B")
+    }
+}
+
 final class ClaudeProviderTests: XCTestCase {
     let provider = ClaudeProvider(baseURL: URL(string: "https://api.anthropic.com")!,
                                   apiKey: "sk-test", model: "claude-opus-4-8")

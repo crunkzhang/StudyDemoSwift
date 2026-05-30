@@ -30,7 +30,10 @@ final class MessageDBHandler {
                 return lHasSeq                       // 有 seqId 的在前,pending 在后
             }
             if lHasSeq {
-                return lhs.seqId < rhs.seqId         // 都有 seqId → 按 seqId 升序
+                if lhs.seqId != rhs.seqId {
+                    return lhs.seqId < rhs.seqId     // 都有 seqId → 按 seqId 升序
+                }
+                return lhs.timestamp < rhs.timestamp // seqId 相等(异常防御)→ 按时间升序
             }
             return lhs.timestamp < rhs.timestamp     // 都没 seqId → 按发送时间升序
         }

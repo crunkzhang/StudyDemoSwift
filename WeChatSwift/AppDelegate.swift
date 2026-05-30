@@ -1,6 +1,7 @@
 import UIKit
 import WeChatRN
 import CatonMonitorKit
+import WCIMSDK
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -9,6 +10,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         LaunchMetrics.mark("didFinishStart")
+
+        // IM SDK 初始化(写死 mock 本地用户 ID),并异步触发首次同步
+        WCIMSDK.setup(userId: "mock_local_user")
+        Task { await WCIMSDK.syncCoordinator?.triggerSync() }
 
         // 主线程强依赖：CADisplayLink + method swizzle 不能放后台线程
         CatonMonitor.shared.start()

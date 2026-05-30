@@ -54,9 +54,11 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
             make.top.leading.trailing.equalToSuperview()
             make.bottom.equalTo(inputBar.snp.top)
         }
+        // iOS 15+ keyboardLayoutGuide.top:键盘收起时贴 safeArea 底部,弹起时贴键盘顶部,
+        // 拖拽收起(keyboardDismissMode=.interactive)也跟手势同步,无需手动监听 notification。
         inputBar.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(view.keyboardLayoutGuide.snp.top)
             make.height.equalTo(52)
         }
 

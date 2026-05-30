@@ -9,23 +9,23 @@ public final class SessionListLogic {
     @Published public private(set) var sessions: [SessionCellModel] = []
 
     private let handler: SessionDBHandler
-    private let observer: SessionDBObserver
     private let sortChain: SortRuleChain
     private var cancellable: AnyCancellable?
 
-    public init(sortChain: SortRuleChain = .default) {
-        guard let db = WCIMSDK.sessionDB else {
-            fatalError("WCIMSDK.setup(userId:) must be called before SessionListLogic.init")
+    /// P0:依赖注入 — 测试时可传 mock SessionDB,默认走 WCIMSDK 实例。
+    public init(db: SessionDB? = WCIMSDK.sessionDB,
+                sortChain: SortRuleChain = .default) {
+        guard let db = db else {
+            fatalError("SessionListLogic 初始化时 SessionDB 为 nil — 请先 WCIMSDK.setup")
         }
         self.handler = SessionDBHandler(db: db)
-        self.observer = SessionDBObserver()
         self.sortChain = sortChain
     }
 
     public func start() {
         loadAndSort()
-        observer.start()
-        cancellable = observer.changeSubject
+        // P0:直接订阅 DBChangeStream,删除 SessionDBObserver 中转层
+        cancellable = DBChangeStream.shared.sessionsPublisher
             .receive(on: DispatchQueue.global(qos: .userInitiated))
             .sink { [weak self] event in
                 self?.handleChange(event)
@@ -34,7 +34,6 @@ public final class SessionListLogic {
 
     public func stop() {
         cancellable?.cancel()
-        observer.stop()
     }
 
     /// VC viewDidAppear / Sync 按钮 触发增量同步。
@@ -51,13 +50,10 @@ public final class SessionListLogic {
     // MARK: - Private
 
     private func handleChange(_ event: SessionChangeEvent) {
+        // P0:统一走 loadAndSort — delete 也重排,避免未来新增 SortRule 后忘同步
         switch event {
-        case .insert, .update:
+        case .insert, .update, .delete:
             loadAndSort()
-        case .delete(let ids):
-            let set = Set(ids)
-            let filtered = sessions.filter { !set.contains($0.sessionId) }
-            DispatchQueue.main.async { [weak self] in self?.sessions = filtered }
         }
     }
 
@@ -73,11 +69,10 @@ public final class SessionListLogic {
 public extension SortRuleChain {
     /// 默认链:置顶 → 草稿 → 时间倒序。
     /// UnreadFirstSortRule 按业务方需求可选开启,这里不放进默认。
-    static var `default`: SortRuleChain {
-        SortRuleChain(rules: [
-            PinnedSortRule(),
-            DraftSortRule(),
-            TimestampSortRule(),
-        ])
-    }
+    /// P1:static let 缓存,避免每次访问重新构造 chain + rule 实例。
+    static let `default` = SortRuleChain(rules: [
+        PinnedSortRule(),
+        DraftSortRule(),
+        TimestampSortRule(),
+    ])
 }

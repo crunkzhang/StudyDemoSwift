@@ -3,45 +3,47 @@ import Combine
 import WCIMSDK
 
 /// 聊天详情页业务逻辑(per session 实例)。
-/// 协调 MessageDBHandler / MessageDBObserver / SendMsgHandler。
+/// 协调 MessageDBHandler / SendMsgHandler,直接订阅 DBChangeStream。
 public final class ChatDetailLogic {
     @Published public private(set) var messages: [MessageCellModel] = []
-    public let renderCache = MessageRenderCache()
+    public let renderCache: MessageRenderCache
 
     public let sessionId: String
     public let contactName: String
 
     private let handler: MessageDBHandler
-    private let observer: MessageDBObserver
     private let sender: SendMsgHandler
     private var cancellable: AnyCancellable?
 
-    public init(sessionId: String, contactName: String) {
-        guard let db = WCIMSDK.messageDB else {
-            fatalError("WCIMSDK.setup must be called before ChatDetailLogic.init")
+    /// P0:依赖注入 — 测试时可传 mock MessageDB,默认走 WCIMSDK 实例。
+    public init(sessionId: String,
+                contactName: String,
+                db: MessageDB? = WCIMSDK.messageDB) {
+        guard let db = db else {
+            fatalError("ChatDetailLogic 初始化时 MessageDB 为 nil — 请先 WCIMSDK.setup")
         }
         self.sessionId = sessionId
         self.contactName = contactName
+        let cache = MessageRenderCache()
+        self.renderCache = cache
         self.handler = MessageDBHandler(
             db: db, sessionId: sessionId,
             myUserId: WCIMSDK.currentUserId,
-            renderCache: renderCache
+            renderCache: cache
         )
-        self.observer = MessageDBObserver(sessionId: sessionId)
         self.sender = SendMsgHandler(sessionId: sessionId, myUserId: WCIMSDK.currentUserId)
     }
 
     public func start() {
         reload()
-        observer.start()
-        cancellable = observer.changeSubject
+        // P0:直接订阅 DBChangeStream,删除 MessageDBObserver 中转层
+        cancellable = DBChangeStream.shared.messagesPublisher(of: sessionId)
             .receive(on: DispatchQueue.global(qos: .userInitiated))
             .sink { [weak self] _ in self?.reload() }
     }
 
     public func stop() {
         cancellable?.cancel()
-        observer.stop()
     }
 
     // MARK: - 命令

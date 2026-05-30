@@ -47,15 +47,14 @@ final class MessageDBHandler {
     }
 
     func toCellModel(_ m: MessageModel) -> MessageCellModel {
-        let payload = (try? JSONDecoder().decode([String: String].self,
-                                                 from: Data(m.contentJSON.utf8))) ?? [:]
+        let content = MessageContent(jsonString: m.contentJSON)
         return MessageCellModel(
             localMsgId: m.localMsgId,
             msgId: m.msgId,
             sessionId: m.sessionId,
             senderId: m.senderId,
             isFromMe: m.senderId == myUserId,
-            text: payload["text"] ?? "",
+            text: content.displayText,
             timestamp: m.timestamp,
             status: MessageStatus(rawValue: m.status) ?? .received
         )

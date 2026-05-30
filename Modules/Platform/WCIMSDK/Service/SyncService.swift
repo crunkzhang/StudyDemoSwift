@@ -171,19 +171,10 @@ public final class MockSyncService: SyncServiceProtocol {
     // MARK: - Helpers
 
     private static func encodeText(_ text: String) -> String {
-        guard let data = try? JSONSerialization.data(withJSONObject: ["text": text]),
-              let json = String(data: data, encoding: .utf8) else {
-            return "{}"
-        }
-        return json
+        MessageContent.text(text).jsonString
     }
 
     private static func decodeTextPreview(_ json: String) -> String {
-        guard let data = json.data(using: .utf8),
-              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let text = dict["text"] as? String else {
-            return ""
-        }
-        return text
+        MessageContent(jsonString: json).displayText
     }
 }

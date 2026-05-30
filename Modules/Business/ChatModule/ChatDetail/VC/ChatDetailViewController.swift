@@ -91,6 +91,7 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
         logic.$messages
             .receive(on: DispatchQueue.main)
             .sink { [weak self] newMessages in
+                print("[DBG][VC] $messages 触发 apply → \(newMessages.count) 条")
                 self?.apply(newMessages)
             }
             .store(in: &cancellables)

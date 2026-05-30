@@ -18,6 +18,7 @@ final class MessageDBObserver {
         cancellable = DBChangeStream.shared.messagesPublisher(of: sessionId)
             .receive(on: DispatchQueue.global(qos: .userInitiated))
             .sink { [weak self] event in
+                print("[DBG][Observer-\(self?.sessionId ?? "?")] 收到 messageEvent")
                 self?.changeSubject.send(event)
             }
     }

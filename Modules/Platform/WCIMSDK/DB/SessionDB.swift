@@ -40,7 +40,7 @@ public final class SessionDB {
 
     // MARK: - Transaction
 
-    public func runTransaction(_ block: () throws -> Void) throws {
+    public func runTransaction(_ block: @escaping () throws -> Void) throws {
         try db.run(transaction: { _ in
             try block()
         })

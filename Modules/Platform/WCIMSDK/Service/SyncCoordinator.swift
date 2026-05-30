@@ -4,6 +4,7 @@ import Foundation
 public final class SyncCoordinator {
     private let service: SyncServiceProtocol
     private let sessionDB: SessionDB
+    private let messageDB: MessageDB
     private let seqIdManager: SeqIdManager
     private let changeStream: DBChangeStream
 
@@ -12,10 +13,12 @@ public final class SyncCoordinator {
 
     public init(service: SyncServiceProtocol,
                 sessionDB: SessionDB,
+                messageDB: MessageDB,
                 seqIdManager: SeqIdManager,
                 changeStream: DBChangeStream = .shared) {
         self.service = service
         self.sessionDB = sessionDB
+        self.messageDB = messageDB
         self.seqIdManager = seqIdManager
         self.changeStream = changeStream
     }
@@ -42,25 +45,37 @@ public final class SyncCoordinator {
     }
 
     private func applyBatch(_ batch: SyncBatch) throws {
-        guard !batch.sessions.isEmpty else { return }
+        let messages = (batch.messages as? [MessageModel]) ?? []
+        guard !batch.sessions.isEmpty || !messages.isEmpty else { return }
 
-        // 同 sessionId 聚合 — 只 upsert 一次
-        var grouped: [String: SessionModel] = [:]
-        for s in batch.sessions { grouped[s.sessionId] = s }
-        let toUpsert = Array(grouped.values)
-        let sessionIds = Array(grouped.keys)
+        var sessionGroup: [String: SessionModel] = [:]
+        for s in batch.sessions { sessionGroup[s.sessionId] = s }
 
-        // 区分 insert vs update
-        let existing = Set(sessionDB.fetch(sessionIds: sessionIds).map { $0.sessionId })
-        let insertedIds = sessionIds.filter { !existing.contains($0) }
-        let updatedIds = sessionIds.filter { existing.contains($0) }
+        var messageGroup: [String: [MessageModel]] = [:]
+        for m in messages { messageGroup[m.sessionId, default: []].append(m) }
 
+        let allSessionIds = Array(Set(sessionGroup.keys).union(messageGroup.keys))
+        let existing = Set(sessionDB.fetch(sessionIds: allSessionIds).map(\.sessionId))
+        let insertedIds = allSessionIds.filter { !existing.contains($0) }
+        let updatedIds = allSessionIds.filter { existing.contains($0) }
+
+        // SessionDB 事务为外层,MessageDB 事务嵌在内
+        // (WCDB 跨 Database 实例事务相互独立,这里靠"事务全部成功才广播"保证一致性视角)
         try sessionDB.runTransaction { [self] in
-            try self.sessionDB.upsert(toUpsert)
+            if !sessionGroup.isEmpty {
+                try self.sessionDB.upsert(Array(sessionGroup.values))
+            }
+            try self.messageDB.runTransaction { [self] in
+                for (sid, msgs) in messageGroup {
+                    try self.messageDB.upsert(msgs, sessionId: sid)
+                }
+            }
         }
 
-        // 事务成功才广播 — 失败抛错则上层 catch 住,不会到这里
         if !insertedIds.isEmpty { changeStream.publish(session: .insert(insertedIds)) }
         if !updatedIds.isEmpty  { changeStream.publish(session: .update(updatedIds)) }
+        for (sid, msgs) in messageGroup where !msgs.isEmpty {
+            changeStream.publish(message: .insert(sessionId: sid, messages: msgs), sessionId: sid)
+        }
     }
 }

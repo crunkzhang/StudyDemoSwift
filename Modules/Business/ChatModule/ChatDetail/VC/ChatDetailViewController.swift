@@ -64,6 +64,12 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
         logic.start()
     }
 
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // 进会话即"已读" — SessionList 红点消失
+        logic.markAllRead()
+    }
+
     deinit {
         logic.stop()
     }

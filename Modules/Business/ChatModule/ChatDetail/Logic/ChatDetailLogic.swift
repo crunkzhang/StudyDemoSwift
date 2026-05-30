@@ -54,6 +54,23 @@ public final class ChatDetailLogic {
         await sender.retry(localMsgId: localMsgId)
     }
 
+    /// 标该会话所有消息为已读 — VC viewDidAppear 调用,
+    /// SessionDB.unreadCount 清零并广播,SessionList 红点消失。
+    public func markAllRead() {
+        guard let sdb = WCIMSDK.sessionDB,
+              let s = sdb.fetch(sessionIds: [sessionId]).first,
+              s.unreadCount > 0 else { return }
+        do {
+            try sdb.runTransaction { [sessionId] in
+                s.unreadCount = 0
+                try sdb.upsert([s])
+            }
+            DBChangeStream.shared.publish(session: .update([sessionId]))
+        } catch {
+            print("[ChatDetail] markAllRead failed: \(error)")
+        }
+    }
+
     // MARK: - 私有
 
     private func reload() {

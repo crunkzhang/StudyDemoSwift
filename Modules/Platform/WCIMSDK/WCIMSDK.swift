@@ -8,6 +8,7 @@ public enum WCIMSDK {
     public private(set) static var tableRegistry: MessageTableNameRegistry?
     public private(set) static var seqIdManager: SeqIdManager?
     public private(set) static var syncCoordinator: SyncCoordinator?
+    public private(set) static var syncTriggers: SyncTriggers?
     public private(set) static var pushService: PushServiceProtocol?
 
     public static func setup(userId: String) {
@@ -20,12 +21,16 @@ public enum WCIMSDK {
         sessionDB = sdb
         messageDB = mdb
         seqIdManager = seq
-        syncCoordinator = SyncCoordinator(
+        let coord = SyncCoordinator(
             service: MockSyncService(),
             sessionDB: sdb,
             messageDB: mdb,
             seqIdManager: seq
         )
+        syncCoordinator = coord
+        let triggers = SyncTriggers(coordinator: coord)
+        triggers.start()
+        syncTriggers = triggers
         pushService = MockPushService()
     }
 

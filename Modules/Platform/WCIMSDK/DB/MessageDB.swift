@@ -40,18 +40,21 @@ public final class MessageDB {
     public func fetchPage(sessionId: String, beforeSeqId: Int64? = nil, limit: Int = 20) -> [MessageModel] {
         let table = registry.tableName(for: sessionId)
         try? ensureTable(table)
+        // 按 timestamp 排序而不是 seqId — pending 消息 seqId=0(server 未分配),
+        // 按 timestamp 排序天然落底(now 最大)。ACK 回填后 timestamp 更新但仍
+        // 在最新区间,顺序稳定不闪。seqId 仍用于增量同步锚点,只是不参与 UI 排序。
         do {
             if let before = beforeSeqId {
                 return try db.getObjects(
                     fromTable: table,
                     where: MessageModel.Properties.seqId < before,
-                    orderBy: [MessageModel.Properties.seqId.order(.descending)],
+                    orderBy: [MessageModel.Properties.timestamp.order(.descending)],
                     limit: limit
                 )
             } else {
                 return try db.getObjects(
                     fromTable: table,
-                    orderBy: [MessageModel.Properties.seqId.order(.descending)],
+                    orderBy: [MessageModel.Properties.timestamp.order(.descending)],
                     limit: limit
                 )
             }

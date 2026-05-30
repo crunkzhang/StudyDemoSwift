@@ -42,12 +42,15 @@ public final class SessionListViewController: BaseViewController {
         tableView.snp.makeConstraints { $0.edges.equalToSuperview() }
         _ = dataSource
 
-        navigationItem.rightBarButtonItems = [
-            UIBarButtonItem(title: "🔄", style: .plain, target: self, action: #selector(manualSync)),
-            #if DEBUG
-            UIBarButtonItem(title: "🗑️", style: .plain, target: self, action: #selector(wipeAndReload)),
-            #endif
-        ].compactMap { $0 }
+        var rightItems: [UIBarButtonItem] = [
+            UIBarButtonItem(title: "🔄", style: .plain, target: self, action: #selector(manualSync))
+        ]
+        #if DEBUG
+        rightItems.append(
+            UIBarButtonItem(title: "🗑️", style: .plain, target: self, action: #selector(wipeAndReload))
+        )
+        #endif
+        navigationItem.rightBarButtonItems = rightItems
 
         bind()
         logic.start()

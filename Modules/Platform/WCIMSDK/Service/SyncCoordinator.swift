@@ -55,8 +55,8 @@ public final class SyncCoordinator {
         let insertedIds = sessionIds.filter { !existing.contains($0) }
         let updatedIds = sessionIds.filter { existing.contains($0) }
 
-        try sessionDB.runTransaction {
-            try sessionDB.upsert(toUpsert)
+        try sessionDB.runTransaction { [self] in
+            try self.sessionDB.upsert(toUpsert)
         }
 
         // 事务成功才广播 — 失败抛错则上层 catch 住,不会到这里

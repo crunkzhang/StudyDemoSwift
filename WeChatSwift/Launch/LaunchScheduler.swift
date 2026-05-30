@@ -1,4 +1,9 @@
 import Foundation
+import WeChatRN
+import ChatModule
+import ContactModule
+import DiscoverModule
+import MeModule
 
 // MARK: - Data Model
 
@@ -14,6 +19,8 @@ enum TaskName: String, Hashable {
     case adSDK          = "AdSDK"
     case paySDK         = "PaySDK"
     case arSDK          = "ARSDK"
+    case routeSetup     = "RouteSetup"
+    case rnBundle       = "RNBundle"
 }
 
 enum TaskTrigger: Equatable {
@@ -298,5 +305,25 @@ extension LaunchScheduler {
         register(.adSDK,  deps: [], trigger: .afterFirstFrame, failurePolicy: .tolerant) { AdSDK.setup() }
         register(.paySDK, deps: [], trigger: .onEvent("enterPayPage")) { PaySDK.setup() }
         register(.arSDK,  deps: [], trigger: .afterFirstFrame, failurePolicy: .tolerant) { ARSDK.setup() }
+
+        // 路由注册：syncAtStart，首帧渲染前必须完成。
+        // 五个模块打包进同一个 task，避免并发写 Router.routes 字典。
+        register(.routeSetup, deps: [], trigger: .syncAtStart) {
+            RNBaseViewController.registerPageRoute()
+            ChatModule.registerRoutes()
+            ContactModule.registerRoutes()
+            DiscoverModule.registerRoutes()
+            MeModule.registerRoutes()
+        }
+
+        // RN Bundle 热更新：afterFirstFrame，延迟到首帧后再做网络检查，不占启动窗口。
+        // CatonMonitor / RNFactoryManager 需主线程初始化，保留在 AppDelegate 内联调用。
+        register(.rnBundle, deps: [], trigger: .afterFirstFrame, failurePolicy: .tolerant) {
+            RNBundleManager.shared.configure(
+                remoteURL: "https://cz-rn-bundle.oss-cn-hangzhou.aliyuncs.com",
+                appVersion: "1.0.0"
+            )
+            RNBundleManager.shared.start()
+        }
     }
 }

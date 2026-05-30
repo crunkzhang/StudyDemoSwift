@@ -1,9 +1,5 @@
 import UIKit
 import WeChatRN
-import ChatModule
-import ContactModule
-import DiscoverModule
-import MeModule
 import CatonMonitorKit
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -14,27 +10,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     ) -> Bool {
         LaunchMetrics.mark("didFinishStart")
 
-        // ── 卡顿检测 ──
+        // 主线程强依赖：CADisplayLink + method swizzle 不能放后台线程
         CatonMonitor.shared.start()
-
-        // ── 原有 RN 初始化 ──
+        // 主线程强依赖：RCTReactNativeFactory init 需主线程
         RNFactoryManager.shared.setup()
-        RNBundleManager.shared.configure(
-            remoteURL: "https://cz-rn-bundle.oss-cn-hangzhou.aliyuncs.com",
-            appVersion: "1.0.0"
-        )
-        RNBundleManager.shared.start()
 
-        // ── SDK 并行调度 ──
+        // 路由注册（syncAtStart）+ RN Bundle 热更新（afterFirstFrame）已移入调度器
         LaunchScheduler.shared.registerAll()
         LaunchScheduler.shared.start()
-
-        // ── 路由注册 ──
-        RNBaseViewController.registerPageRoute()
-        ChatModule.registerRoutes()
-        ContactModule.registerRoutes()
-        DiscoverModule.registerRoutes()
-        MeModule.registerRoutes()
 
         LaunchMetrics.mark("didFinishEnd")
         LaunchMetrics.observeFirstFrame()

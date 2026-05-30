@@ -13,10 +13,6 @@ final class SessionDBHandler {
         db.fetchAll().map(Self.toCellModel)
     }
 
-    func fetch(sessionIds: [String]) -> [SessionCellModel] {
-        db.fetch(sessionIds: sessionIds).map(Self.toCellModel)
-    }
-
     // MARK: - 转换
 
     static func toCellModel(_ m: SessionModel) -> SessionCellModel {

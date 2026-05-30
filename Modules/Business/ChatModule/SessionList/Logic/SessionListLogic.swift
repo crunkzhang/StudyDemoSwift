@@ -32,20 +32,18 @@ public final class SessionListLogic {
             }
     }
 
-    public func stop() {
-        cancellable?.cancel()
-    }
-
     /// VC viewDidAppear / Sync 按钮 触发增量同步。
     /// - Parameter force: 手动按钮传 true(Mock 才吐新增量);viewDidAppear 传 false。
     public func triggerRemoteSync(force: Bool = false) async {
         await WCIMSDK.syncCoordinator?.triggerSync(force: force)
     }
 
-    /// 强制从 DB 全量重读(DEBUG 清库后让 UI 立刻变空白)
+    #if DEBUG
+    /// 强制从 DB 全量重读 — 仅 DEBUG 配合 🗑️ 清库,生产不需要。
     public func reloadFromDB() {
         loadAndSort()
     }
+    #endif
 
     // MARK: - Private
 

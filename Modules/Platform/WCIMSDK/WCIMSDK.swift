@@ -8,6 +8,7 @@ public enum WCIMSDK {
     public private(set) static var tableRegistry: MessageTableNameRegistry?
     public private(set) static var seqIdManager: SeqIdManager?
     public private(set) static var syncCoordinator: SyncCoordinator?
+    public private(set) static var pushService: PushServiceProtocol?
 
     public static func setup(userId: String) {
         currentUserId = userId
@@ -25,5 +26,6 @@ public enum WCIMSDK {
             messageDB: mdb,
             seqIdManager: seq
         )
+        pushService = MockPushService()
     }
 }

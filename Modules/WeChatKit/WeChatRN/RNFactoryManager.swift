@@ -95,17 +95,22 @@ private class RNAppDelegate: RCTDefaultReactNativeFactoryDelegate {
     }
 
     override func bundleURL() -> URL? {
-    #if DEBUG
-        RCTBundleURLProvider.sharedSettings().jsLocation = "172.27.90.56"
-        return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
-    #else
+        // 优先级:已下载远程 bundle → Metro packager(仅 DEBUG)→ 内置兜底
+        // RNBundleManager 在 DEBUG/RELEASE 都生效,远程更新/灰度/回滚链路一致。
         if let downloaded = RNBundleManager.shared.bundlePath {
             print("[RNBundle][Load] 加载已下载 bundle: \(downloaded.path)")
             return downloaded
         }
+    #if DEBUG
+        // 没有已下载 bundle 时,DEBUG 模式回落 Metro(Fast Refresh 调试体验)
+        // 想强制走"内置兜底"调试热更新链路,把这段 #if DEBUG 注释掉即可
+        if let metro = RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index") {
+            print("[RNBundle][Load] 加载 Metro: \(metro.absoluteString)")
+            return metro
+        }
+    #endif
         let builtin = Bundle.main.url(forResource: "main", withExtension: "jsbundle")
         print("[RNBundle][Load] 加载内置兜底 bundle")
         return builtin
-    #endif
     }
 }

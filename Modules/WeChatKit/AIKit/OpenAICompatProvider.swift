@@ -1,20 +1,20 @@
 import Foundation
 
-/// DeepSeek(OpenAI 兼容)provider。云端直连,DEBUG/RELEASE 均可用,无需本地代理。
-/// 与 ClaudeProvider 的差异:system 进 messages、Bearer 鉴权、/chat/completions、choices 解析。
-public final class DeepSeekProvider: AIProvider {
+/// 通用 OpenAI 兼容 provider:适配 DeepSeek / 通义千问(DashScope)/ 智谱 GLM 等。
+/// 三家的 /chat/completions 请求与响应结构一致,仅 baseURL / model / key 不同。
+public final class OpenAICompatProvider: AIProvider {
     private let baseURL: URL
     private let apiKey: String
     private let model: String
+    private let jsonMode: Bool
     private let session: URLSession
 
-    public init(baseURL: URL = URL(string: "https://api.deepseek.com")!,
-                apiKey: String,
-                model: String = "deepseek-chat",
-                session: URLSession = .shared) {
+    public init(baseURL: URL, apiKey: String, model: String,
+                jsonMode: Bool = true, session: URLSession = .shared) {
         self.baseURL = baseURL
         self.apiKey = apiKey
         self.model = model
+        self.jsonMode = jsonMode
         self.session = session
     }
 
@@ -29,14 +29,13 @@ public final class DeepSeekProvider: AIProvider {
         var messages: [[String: Any]] = [["role": "system", "content": request.system]]
         messages += request.messages.map { ["role": $0.role.rawValue, "content": $0.content] }
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": model,
             "max_tokens": request.maxTokens,
             "temperature": request.temperature,
-            "messages": messages,
-            // 我们的 prompt 均要求只输出 JSON,开启 JSON 模式提升可靠性
-            "response_format": ["type": "json_object"]
+            "messages": messages
         ]
+        if jsonMode { body["response_format"] = ["type": "json_object"] }
         urlReq.httpBody = try JSONSerialization.data(withJSONObject: body)
         return urlReq
     }

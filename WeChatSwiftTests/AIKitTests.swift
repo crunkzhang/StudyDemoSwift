@@ -73,8 +73,9 @@ final class ClaudeProviderTests: XCTestCase {
     }
 }
 
-final class DeepSeekProviderTests: XCTestCase {
-    let provider = DeepSeekProvider(apiKey: "sk-test")
+final class OpenAICompatProviderTests: XCTestCase {
+    let provider = OpenAICompatProvider(baseURL: URL(string: "https://api.deepseek.com")!,
+                                        apiKey: "sk-test", model: "deepseek-chat")
 
     func test_makeRequest_openAIShape() throws {
         let req = AIRequest(system: "你是裁判",
@@ -91,6 +92,14 @@ final class DeepSeekProviderTests: XCTestCase {
         XCTAssertEqual(msgs.last?["content"] as? String, "他死了吗?")
         let rf = body["response_format"] as? [String: Any]
         XCTAssertEqual(rf?["type"] as? String, "json_object")
+    }
+
+    func test_baseURL_qwen_dashscopePath() throws {
+        let qwen = OpenAICompatProvider(baseURL: URL(string: "https://dashscope.aliyuncs.com/compatible-mode/v1")!,
+                                        apiKey: "k", model: "qwen-plus")
+        let urlReq = try qwen.makeURLRequest(AIRequest(system: "", messages: []))
+        XCTAssertEqual(urlReq.url?.absoluteString,
+                       "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions")
     }
 
     func test_parse_choicesContent() throws {

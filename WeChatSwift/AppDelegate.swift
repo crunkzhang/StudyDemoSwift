@@ -32,9 +32,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             remoteURL: "https://cz-rn-bundle.oss-cn-hangzhou.aliyuncs.com/games/manifest.json"
         )
 
-        // AI 能力(海龟汤等)provider 装配:DeepSeek 云端直连,key 走 Keychain
-        // 首次注入 key:临时加一行 KeychainAIKey.save("sk-xxx"),跑一次后删除
-        AIConfig.install(.deepseek(apiKey: KeychainAIKey.load() ?? ""))
+        // AI 能力(海龟汤等):多厂商 OpenAI 兼容,游戏内可切换;key 走 Keychain
+        // 首次注入各家 key:本地临时 KeychainAIKey.save("sk-xxx", vendor: "deepseek") 跑一次,勿提交
+        AIConfig.installSelected()
 
         // 路由注册（syncAtStart）+ RN Bundle 热更新（afterFirstFrame）已移入调度器
         LaunchScheduler.shared.registerAll()

@@ -1,17 +1,17 @@
 import Foundation
 import Security
 
-/// 极简 Keychain 封装,仅用于存取 AI provider 的 API Key。
+/// 极简 Keychain 封装,按 vendor 分别存取各家 AI 的 API Key。
 /// API Key 绝不进 bundle / 源码 / JS。
 public enum KeychainAIKey {
-    private static let account = "ai.anthropic.apiKey"
     private static let service = "com.study.wcSwift.ai"
+    private static func account(_ vendor: String) -> String { "ai.key.\(vendor)" }
 
-    public static func load() -> String? {
+    public static func load(_ vendor: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
+            kSecAttrAccount as String: account(vendor),
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -22,11 +22,11 @@ public enum KeychainAIKey {
     }
 
     @discardableResult
-    public static func save(_ key: String) -> Bool {
+    public static func save(_ key: String, vendor: String) -> Bool {
         let base: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrAccount as String: account(vendor)
         ]
         SecItemDelete(base as CFDictionary)
         var attrs = base

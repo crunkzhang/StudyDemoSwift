@@ -27,6 +27,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>用于扫一扫识别二维码</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>用于从相册选取图片识别二维码</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

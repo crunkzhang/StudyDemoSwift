@@ -54,6 +54,8 @@ targets:
         UIUserInterfaceStyle: Light
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        NSCameraUsageDescription: 用于扫一扫识别二维码
+        NSPhotoLibraryUsageDescription: 用于从相册选取图片识别二维码
         RCTNewArchEnabled: true
     settings:
       base:

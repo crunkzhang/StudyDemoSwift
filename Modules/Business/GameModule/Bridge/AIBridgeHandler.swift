@@ -14,7 +14,8 @@ public final class AIBridgeHandler: GameBridgeHandler {
             case "ai.startPuzzle":
                 let r = try await service.startPuzzle(
                     difficulty: params["difficulty"] as? String ?? "normal",
-                    theme: params["theme"] as? String)
+                    theme: params["theme"] as? String,
+                    avoid: params["avoid"] as? [String] ?? [])
                 return .success(["puzzleId": r.puzzleId, "title": r.title, "surface": r.surface])
 
             case "ai.ask":

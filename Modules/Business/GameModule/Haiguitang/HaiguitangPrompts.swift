@@ -9,10 +9,27 @@ enum HaiguitangPrompts {
     {"title":"≤10字标题","surface":"2-4句汤面,只给现象不给原因","solution":"完整真相,解释汤面所有疑点"}
     """
 
-    static func generateUser(difficulty: String, theme: String?) -> String {
-        var s = "难度:\(difficulty)。"
-        if let t = theme, !t.isEmpty { s += "主题:\(t)。" }
-        s += "请出一道新题。"
+    /// 难度 → 明确的出题约束,让三档体感真正不同
+    private static func difficultyGuide(_ difficulty: String) -> String {
+        switch difficulty {
+        case "easy":
+            return "难度【简单】:汤面信息较完整、线索明显,真相只需一层推理即可还原,适合新手。"
+        case "hard":
+            return "难度【困难】:汤面极简且带强误导,真相需要多层反转、出人意料但仍逻辑自洽,适合老手烧脑。"
+        default:
+            return "难度【普通】:汤面留有明显缺口,需要 2-3 步推理,可有适度误导。"
+        }
+    }
+
+    static func generateUser(difficulty: String, theme: String?, avoid: [String]) -> String {
+        var s = difficultyGuide(difficulty)
+        if let t = theme, !t.isEmpty {
+            s += "\n题目风格:【\(t)】,汤面与汤底都要贴合该风格的氛围。"
+        }
+        if !avoid.isEmpty {
+            s += "\n请避免与以下已出过的题重复(主题/核心诡计都要不同):\(avoid.joined(separator: "、"))。"
+        }
+        s += "\n请出一道全新的题。"
         return s
     }
 

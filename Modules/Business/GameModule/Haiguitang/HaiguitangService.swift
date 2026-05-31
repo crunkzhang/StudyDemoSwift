@@ -13,10 +13,10 @@ public actor HaiguitangService {
 
     // MARK: - 生成
 
-    func startPuzzle(difficulty: String, theme: String?) async throws -> StartResult {
+    func startPuzzle(difficulty: String, theme: String?, avoid: [String] = []) async throws -> StartResult {
         let req = AIRequest(
             system: HaiguitangPrompts.generateSystem,
-            messages: [AIMessage(role: .user, content: HaiguitangPrompts.generateUser(difficulty: difficulty, theme: theme))],
+            messages: [AIMessage(role: .user, content: HaiguitangPrompts.generateUser(difficulty: difficulty, theme: theme, avoid: avoid))],
             maxTokens: 512, temperature: 0.8
         )
         let resp = try await client.complete(req)

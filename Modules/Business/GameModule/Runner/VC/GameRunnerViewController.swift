@@ -115,6 +115,7 @@ public final class GameRunnerViewController: BaseViewController, PageRoutable {
         if game?.capabilities?.contains("bridge") == true {
             let bridge = GameBridge(webView: webView)
             bridge.register(handler: AIBridgeHandler())
+            bridge.register(handler: SysBridgeHandler())
             webView.configuration.userContentController.add(bridge, name: GameBridge.messageHandlerName)
             self.gameBridge = bridge
         }

@@ -95,23 +95,6 @@ post_install do |installer|
     end
   end
 
-  # RN 0.84 默认用预编译 React 核心(React-Core-prebuilt/React.xcframework),
-  # 它是 Release 变体,不含 getDebugProps / DebugStringConvertible 等 debug 符号。
-  # 但源码 pod(React-FabricComponents、react-native-screens/svg/safe-area 等)在 Debug 下
-  # 会按 REACT_NATIVE_DEBUG 编译 Fabric 头,vtable 引用这些 debug 符号 → 链接 app 时缺符号。
-  # 解法:强制所有 pod 的 Debug 配置定义 REACT_NATIVE_PRODUCTION,与预编译核心保持一致,
-  # 引用方就不再引用 debug 符号。每次 pod install 自动补回。
-  Dir.glob(File.join('Pods', 'Target Support Files', '*', '*.debug.xcconfig')).each do |xcconfig_path|
-    content = File.read(xcconfig_path)
-    next if content.include?('REACT_NATIVE_PRODUCTION')
-    if content =~ /^GCC_PREPROCESSOR_DEFINITIONS\s*=/
-      content = content.sub(/^(GCC_PREPROCESSOR_DEFINITIONS\s*=\s*)(.*)$/) { "#{$1}#{$2} REACT_NATIVE_PRODUCTION=1" }
-    else
-      content = content.rstrip + "\nGCC_PREPROCESSOR_DEFINITIONS = $(inherited) REACT_NATIVE_PRODUCTION=1\n"
-    end
-    File.write(xcconfig_path, content)
-  end
-
   # 把 RN 相关 pod 从 Development Pods 收拢到 "RN" 子分组，
   # 自有模块留在顶层，Xcode Navigator 更清爽。
   # Xcode Navigator 分组：按层次归类，折叠后一目了然

@@ -10,7 +10,8 @@ public enum MessageStatus: Int {
 
 public enum MessageContentType: Int {
     case text = 0
-    // image=1, voice=2 ... Phase 2 仅 text
+    // image=1, voice=2 ...
+    case card = 10   // DSL 卡片消息
 }
 
 public final class MessageModel: TableCodable, MessageEntityRef {

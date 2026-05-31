@@ -21,6 +21,7 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
         tv.dataSource = self
         tv.delegate = self
         tv.register(TextMessageCell.self, forCellReuseIdentifier: TextMessageCell.reuseID)
+        tv.register(CardMessageCell.self, forCellReuseIdentifier: CardMessageCell.reuseID)
         tv.separatorStyle = .none
         tv.backgroundColor = .white
         tv.rowHeight = UITableView.automaticDimension
@@ -69,8 +70,26 @@ public final class ChatDetailViewController: BaseViewController, PageRoutable {
             make.height.equalTo(52)
         }
 
+        // Demo:右上角「发卡片」按钮,演示 DSL 卡片消息走完整发送队列
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "rectangle.on.rectangle.angled"),
+            style: .plain, target: self, action: #selector(sendDemoCard))
+
         bind()
         logic.start()
+    }
+
+    /// 发一张示例订单卡(payload 为 DSL card 节点 JSON)
+    @objc private func sendDemoCard() {
+        let samples: [String] = [
+            // 订单卡:header + 键值行 + footer
+            ##"{"type":"card","action":"wechat://rn?page=logistics","children":[{"type":"header","thumb":"shippingbox.fill","thumbColor":"#FF9500","title":"订单已发货","subtitle":"顺丰速运 · SF1234567890"},{"type":"rows","children":[{"type":"row","label":"商品","value":"拿铁咖啡 × 1"},{"type":"row","label":"实付","value":"¥38.00"}]},{"type":"divider"},{"type":"footer","text":"点击查看物流详情"}]}"##,
+            // 支付卡:大金额 + footer
+            ##"{"type":"card","action":"wechat://rn?page=bill","children":[{"type":"amount","amount":"-¥38.00","caption":"向「星巴克(国贸店)」付款","color":"#07C160"},{"type":"divider"},{"type":"footer","text":"查看账单详情"}]}"##,
+            // 链接卡:标题副标题 + 右缩略图 + footer
+            ##"{"type":"card","action":"wechat://rn?page=article","children":[{"type":"link","title":"WeChatSwift 动态化引擎","subtitle":"一篇讲清 DSL/SDUI 的实现原理","thumb":"link","thumbColor":"#576B95"},{"type":"divider"},{"type":"footer","text":"网页链接 · mp.weixin.qq.com"}]}"##
+        ]
+        logic.sendCard(samples.randomElement()!)
     }
 
     public override func viewDidAppear(_ animated: Bool) {
@@ -151,9 +170,17 @@ extension ChatDetailViewController: UITableViewDataSource {
     }
 
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: TextMessageCell.reuseID, for: indexPath) as! TextMessageCell
-        cell.configure(messages[indexPath.row])
-        return cell
+        let model = messages[indexPath.row]
+        switch model.kind {
+        case .card:
+            let cell = tableView.dequeueReusableCell(withIdentifier: CardMessageCell.reuseID, for: indexPath) as! CardMessageCell
+            cell.configure(model)
+            return cell
+        case .text:
+            let cell = tableView.dequeueReusableCell(withIdentifier: TextMessageCell.reuseID, for: indexPath) as! TextMessageCell
+            cell.configure(model)
+            return cell
+        }
     }
 }
 

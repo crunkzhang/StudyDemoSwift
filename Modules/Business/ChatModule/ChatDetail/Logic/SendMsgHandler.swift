@@ -78,6 +78,28 @@ final class SendMsgHandler {
         }
     }
 
+    /// 发送 DSL 卡片消息 — 与文本走同一条发送队列/状态机,只是 contentType=card。
+    func sendCard(json: String) {
+        let localMsgId = UUID().uuidString
+        let traceId = UUID().uuidString
+        let now = Int64(Date().timeIntervalSince1970)
+        let contentJSON = MessageContent.card(json).jsonString
+
+        let pending = buildPendingMessage(
+            localMsgId: localMsgId, traceId: traceId,
+            contentJSON: contentJSON, now: now, contentType: .card
+        )
+        guard insertPending(pending) else { return }
+        updateSessionPreview(text: "[卡片]", timestamp: now)
+        changeStream.publish(
+            message: .insert(sessionId: sessionId, messages: [pending]),
+            sessionId: sessionId
+        )
+        Task {
+            await uploader.enqueue(localMsgId: localMsgId, traceId: traceId, contentJSON: contentJSON)
+        }
+    }
+
     /// 重发失败消息 — localMsgId 不变,traceId 重生(用于链路监控区分尝试)。
     func retry(localMsgId: String) {
         guard let m = messageDB.fetch(localMsgIds: [localMsgId], sessionId: sessionId).first else { return }
@@ -108,12 +130,13 @@ final class SendMsgHandler {
     // MARK: - 私有
 
     private func buildPendingMessage(localMsgId: String, traceId: String,
-                                     contentJSON: String, now: Int64) -> MessageModel {
+                                     contentJSON: String, now: Int64,
+                                     contentType: MessageContentType = .text) -> MessageModel {
         let m = MessageModel()
         m.localMsgId = localMsgId
         m.sessionId = sessionId
         m.senderId = myUserId
-        m.contentType = MessageContentType.text.rawValue
+        m.contentType = contentType.rawValue
         m.contentJSON = contentJSON
         m.timestamp = now
         m.status = MessageStatus.sending.rawValue

@@ -23,6 +23,7 @@ Pod::Spec.new do |s|
   s.dependency 'SnapKit'
   s.dependency 'SDWebImage'
   s.dependency 'WCIMSDK'
+  s.dependency 'DSLKit'
 
   s.test_spec 'ChatModuleTests' do |ts|
     ts.source_files = 'ChatModuleTests/**/*.swift'

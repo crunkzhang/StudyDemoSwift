@@ -4,12 +4,14 @@ import Foundation
 /// 持久化时通过 jsonString 写入 MessageModel.contentJSON,解析时通过 init(jsonString:) 还原。
 public enum MessageContent: Codable, Equatable {
     case text(String)
+    /// DSL 卡片消息:payload 为卡片 schema 的 JSON 字符串(订单卡/链接卡等)
+    case card(String)
     // 未来:case image(url:String, width:Int, height:Int)
     //       case voice(url:String, duration:Int)
 
     // MARK: - Codable
 
-    private enum CodingKeys: String, CodingKey { case type, text }
+    private enum CodingKeys: String, CodingKey { case type, text, card }
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
@@ -17,6 +19,9 @@ public enum MessageContent: Codable, Equatable {
         case .text(let s):
             try c.encode("text", forKey: .type)
             try c.encode(s, forKey: .text)
+        case .card(let json):
+            try c.encode("card", forKey: .type)
+            try c.encode(json, forKey: .card)
         }
     }
 
@@ -27,8 +32,11 @@ public enum MessageContent: Codable, Equatable {
         case "text":
             let s = try c.decodeIfPresent(String.self, forKey: .text) ?? ""
             self = .text(s)
+        case "card":
+            let json = try c.decodeIfPresent(String.self, forKey: .card) ?? "{}"
+            self = .card(json)
         default:
-            // 未来新增 case 时,旧客户端遇到未知 type 兜底
+            // 旧客户端遇到未知 type 兜底为空文本(向前兼容,不崩)
             self = .text("")
         }
     }
@@ -64,6 +72,13 @@ public enum MessageContent: Codable, Equatable {
     public var displayText: String {
         switch self {
         case .text(let s): return s
+        case .card: return "[卡片]"
         }
+    }
+
+    /// 卡片 payload(仅 .card 有值)
+    public var cardJSON: String? {
+        if case .card(let json) = self { return json }
+        return nil
     }
 }

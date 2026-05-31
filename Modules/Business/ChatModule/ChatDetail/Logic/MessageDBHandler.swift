@@ -48,6 +48,7 @@ final class MessageDBHandler {
 
     func toCellModel(_ m: MessageModel) -> MessageCellModel {
         let content = MessageContent(jsonString: m.contentJSON)
+        let isCard = content.cardJSON != nil
         return MessageCellModel(
             localMsgId: m.localMsgId,
             msgId: m.msgId,
@@ -56,7 +57,9 @@ final class MessageDBHandler {
             isFromMe: m.senderId == myUserId,
             text: content.displayText,
             timestamp: m.timestamp,
-            status: MessageStatus(rawValue: m.status) ?? .received
+            status: MessageStatus(rawValue: m.status) ?? .received,
+            kind: isCard ? .card : .text,
+            cardJSON: content.cardJSON
         )
     }
 
@@ -80,6 +83,8 @@ final class MessageDBHandler {
                 await Task.yield()                  // 让出执行权,防止长循环阻塞
             }
             guard cache.height(for: m.localMsgId) == nil else { continue }
+            // 卡片走 cell 自适应高度,不预算文本高度(否则会被算成一行小高度)
+            guard m.kind == .text else { continue }
             let rect = (m.text as NSString).boundingRect(
                 with: CGSize(width: contentWidth, height: .greatestFiniteMagnitude),
                 options: [.usesLineFragmentOrigin, .usesFontLeading],

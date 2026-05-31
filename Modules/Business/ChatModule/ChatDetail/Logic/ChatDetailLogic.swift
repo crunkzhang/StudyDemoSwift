@@ -53,6 +53,11 @@ public final class ChatDetailLogic {
         sender.send(text: text)
     }
 
+    /// 发送 DSL 卡片消息(payload 为卡片 schema JSON),走同一发送队列。
+    public func sendCard(_ json: String) {
+        sender.sendCard(json: json)
+    }
+
     public func retry(_ localMsgId: String) {
         sender.retry(localMsgId: localMsgId)
     }

@@ -12,11 +12,11 @@
 
 | 能力 | 模块 | 说明 |
 |---|---|---|
-| 🧩 动态化页面引擎（SDUI） | `DSLKit` | JSON 描述页面 → 原生渲染 → OSS 热更，免发版改页面；支持组件注册、灰度、回滚、版本校验、可观测 |
 | ⚛️ React Native 混合 | `WeChatRN` | RN New Architecture（Hermes + Fabric）；Bridge / 事件总线 / Bundle 热更新（下载·版本·sha256·灰度·回滚） |
-| 💬 自研 IM SDK | `WCIMSDK` | 基于 WCDB 的本地存储、seqId 增量同步、推送、分会话上传、DB 变更流 |
-| 🤖 AI 能力接入 | `AIKit` | 统一 Provider 抽象，DeepSeek / 通义 / 智谱 **运行时一键切换**（OpenAI 兼容）+ Claude；SSE 流式、Keychain 存密钥 |
 | 🎮 小游戏平台 | `GameModule` | 游戏从 **OSS 动态下发**（manifest + sha256 + 灰度 + 回退），H5 经 JS Bridge 调端上 AI；首发「海龟汤」AI 出题/裁判推理游戏 |
+| 🤖 AI 能力接入 | `AIKit` | 统一 Provider 抽象，DeepSeek / 通义 / 智谱 **运行时一键切换**（OpenAI 兼容）+ Claude；SSE 流式、Keychain 存密钥 |
+| 🧩 动态化页面引擎（SDUI） | `DSLKit` | JSON 描述页面 → 原生渲染 → OSS 热更，免发版改页面；支持组件注册、灰度、回滚、版本校验、可观测 |
+| 💬 自研 IM SDK | `WCIMSDK` | 基于 WCDB 的本地存储、seqId 增量同步、推送、分会话上传、DB 变更流 |
 | 📉 性能 / 卡顿监控 | `CatonMonitorKit` | FPS / RunLoop / Watchdog 多探测器、堆栈抓取与符号化、页面追踪、磁盘存储、调试浮层 |
 | 🌐 网络基础设施 | `DDNetwork` | `URLSession + async/await` 轻量网络库，Endpoint 描述、拦截器、认证、重试、日志 |
 | 🧭 路由 / 解耦 | `NavigateKit` · `WeChatRouter` | `wechat://` URL 路由，模块间零直接依赖 |
@@ -151,57 +151,6 @@ WeChatSwift/
 
 ---
 
-### 🧩 DSLKit —— 动态化页面引擎（SDUI / OSS 下发）
-
-在「原生」与「RN/H5」之间补上 **比原生灵活、比 RN/H5 轻** 的动态化中间层：
-页面用 JSON 描述 → 走 OSS 下发 → **客户端原生渲染**，免发版改页面。复用了 RN 热更的同一套发布范式，但解决了「页面渲染要**即时同步**拿到数据」这个新约束。
-
-**读写分离 + 三级降级**（`PageSchemaManager`）：
-
-- **读 `page(for:)` 是同步的**（VC 渲染等不起）：`内存缓存 → 磁盘当前版 → 内置兜底`，
-  逐级 fallback，每一级都过校验，拿不到可渲染页就返回 `nil`（绝不渲染白页）。
-- **刷新 `refresh()` 是异步且去重的**：启动 + 每次进页可能并发触发，用 in-flight `Task` 合并成一次，
-  不重复打网络/写磁盘；为保住同步读语义，用 `NSLock` 临界区而非 actor（注释里写明了取舍）。
-
-**三重校验门 + 单页隔离**（坏 schema 永远进不了渲染）：
-
-1. JSON 能解析；2. `minClient ≤ 端能力版本`（向前兼容，老端自动忽略新组件页）；
-3. **至少含一个已注册顶层组件**——挡掉「空页/全是未知组件」导致的白屏。
-校验不过就**保留旧版、不污染当前版**；多页下发时**单页失败不阻断其他页**。
-
-**按页独立灰度（比 RN 那套更细）**：`Grayscale` 用 **FNV-1a(deviceId + pageId)** 分桶——
-同一设备在不同页面的灰度桶**相互无关**，而不是「要么全中要么全不中」，分布也比字符求和更均匀。
-
-**安全阀**：运行期发现新版有问题，`rollback(pageId:)` 一键回退到上一版本；
-Action 分发带 **scheme 白名单**，下发的跳转只能走允许的 `wechat://` 协议。
-
-> 首发试验田：**「我的」页整页 DSL 化**（低频、低风险、标准列表型）；
-> 并已支撑 **IM 结构化消息卡片** —— DSL 渲染直接进聊天气泡。
-
----
-
-### 💬 WCIMSDK —— 自研 IM SDK（增量同步 / 本地库 / 不丢消息）
-
-- **本地库**：基于 **WCDB**，消息**按会话分表**（`MessageTableNameRegistry`），写入走事务；
-  `DBChangeStream` 把 DB 变更转成事件流，驱动 UI 用 **DiffableDataSource** 增量刷新。
-- **seqId 增量同步**：以 `seqId` 为游标拉增量（`fetchIncremental(after:)`），
-  `SyncCoordinator` 编排首屏/进页/兜底等触发时机（`SyncTriggers`）。
-- **不丢消息的关键**：`SeqIdManager` 单点推进 seqId，且**只在 DB 事务 commit 之后**才 `advance`——
-  保证「游标已前进 = 数据已落库」，进程被杀也能从正确位置续传，不漏不重。
-- 推送（`PushService`）、分会话媒体上传（`PerSessionUploader`）。
-
----
-
-### 🤖 AIKit —— 多厂商 AI 接入（可热切换 / 流式 / 密钥安全）
-
-- **统一 `AIProvider` 抽象**，运行时一行切换厂商，业务层零感知。
-- 适配 **Claude（Anthropic Messages API）** 与 **DeepSeek / 通义 / 智谱**——
-  后三家用同一个 `OpenAICompatProvider`（OpenAI 兼容协议）收敛，新增厂商≈加个配置。
-- **SSE 流式**输出（边出题边上屏）；`KeychainAIKey` 把密钥存进 Keychain；
-  Debug 走本地代理、Release 直连，避免密钥进包。
-
----
-
 ### 🎮 GameModule —— OSS 动态加载的小游戏平台 + 海龟汤 AI 游戏
 
 这个模块把两件事捏在一起：**像小程序一样从 OSS 动态加载 H5 游戏**，以及**让游戏通过 Bridge 调到端上的 AI 能力**。海龟汤（一个 AI 出题/裁判的推理游戏）就是跑通整条链路的第一个例子。
@@ -262,6 +211,57 @@ AIConfig.select(.deepseek)   // 切厂商：持久化选择 → 用 Keychain 里
 
 > 这套「manifest 驱动 + 下载/sha256/灰度/回退 + Bridge 调原生」的玩法，正是后来 **DSLKit/SDUI**
 > 动态化页面引擎的能力雏形——先在游戏这种低风险场景跑通，再推广到正式页面。
+
+---
+
+### 🤖 AIKit —— 多厂商 AI 接入（可热切换 / 流式 / 密钥安全）
+
+- **统一 `AIProvider` 抽象**，运行时一行切换厂商，业务层零感知。
+- 适配 **Claude（Anthropic Messages API）** 与 **DeepSeek / 通义 / 智谱**——
+  后三家用同一个 `OpenAICompatProvider`（OpenAI 兼容协议）收敛，新增厂商≈加个配置。
+- **SSE 流式**输出（边出题边上屏）；`KeychainAIKey` 把密钥存进 Keychain；
+  Debug 走本地代理、Release 直连，避免密钥进包。
+
+---
+
+### 🧩 DSLKit —— 动态化页面引擎（SDUI / OSS 下发）
+
+在「原生」与「RN/H5」之间补上 **比原生灵活、比 RN/H5 轻** 的动态化中间层：
+页面用 JSON 描述 → 走 OSS 下发 → **客户端原生渲染**，免发版改页面。复用了 RN 热更的同一套发布范式，但解决了「页面渲染要**即时同步**拿到数据」这个新约束。
+
+**读写分离 + 三级降级**（`PageSchemaManager`）：
+
+- **读 `page(for:)` 是同步的**（VC 渲染等不起）：`内存缓存 → 磁盘当前版 → 内置兜底`，
+  逐级 fallback，每一级都过校验，拿不到可渲染页就返回 `nil`（绝不渲染白页）。
+- **刷新 `refresh()` 是异步且去重的**：启动 + 每次进页可能并发触发，用 in-flight `Task` 合并成一次，
+  不重复打网络/写磁盘；为保住同步读语义，用 `NSLock` 临界区而非 actor（注释里写明了取舍）。
+
+**三重校验门 + 单页隔离**（坏 schema 永远进不了渲染）：
+
+1. JSON 能解析；2. `minClient ≤ 端能力版本`（向前兼容，老端自动忽略新组件页）；
+3. **至少含一个已注册顶层组件**——挡掉「空页/全是未知组件」导致的白屏。
+校验不过就**保留旧版、不污染当前版**；多页下发时**单页失败不阻断其他页**。
+
+**按页独立灰度（比 RN 那套更细）**：`Grayscale` 用 **FNV-1a(deviceId + pageId)** 分桶——
+同一设备在不同页面的灰度桶**相互无关**，而不是「要么全中要么全不中」，分布也比字符求和更均匀。
+
+**安全阀**：运行期发现新版有问题，`rollback(pageId:)` 一键回退到上一版本；
+Action 分发带 **scheme 白名单**，下发的跳转只能走允许的 `wechat://` 协议。
+
+> 首发试验田：**「我的」页整页 DSL 化**（低频、低风险、标准列表型）；
+> 并已支撑 **IM 结构化消息卡片** —— DSL 渲染直接进聊天气泡。
+
+---
+
+### 💬 WCIMSDK —— 自研 IM SDK（增量同步 / 本地库 / 不丢消息）
+
+- **本地库**：基于 **WCDB**，消息**按会话分表**（`MessageTableNameRegistry`），写入走事务；
+  `DBChangeStream` 把 DB 变更转成事件流，驱动 UI 用 **DiffableDataSource** 增量刷新。
+- **seqId 增量同步**：以 `seqId` 为游标拉增量（`fetchIncremental(after:)`），
+  `SyncCoordinator` 编排首屏/进页/兜底等触发时机（`SyncTriggers`）。
+- **不丢消息的关键**：`SeqIdManager` 单点推进 seqId，且**只在 DB 事务 commit 之后**才 `advance`——
+  保证「游标已前进 = 数据已落库」，进程被杀也能从正确位置续传，不漏不重。
+- 推送（`PushService`）、分会话媒体上传（`PerSessionUploader`）。
 
 ---
 

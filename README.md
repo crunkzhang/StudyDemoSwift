@@ -8,6 +8,22 @@
 
 ---
 
+## 🔗 项目矩阵（一壳两端）
+
+这是一套「**原生壳 + 动态内容**」的仿微信系列，由三个仓库协作：本仓库（Swift）是宿主壳，
+另两个仓库分别以 **RN 页面** 和 **H5 游戏** 的形式被它承载，且都走 OSS 热更、免发版上线。
+
+| 仓库 | 角色 | 说明 |
+|---|---|---|
+| **[StudyDemoSwift](https://github.com/crunkzhang/StudyDemoSwift)**（本仓库） | 原生 iOS 壳 / 宿主 | Swift + UIKit，承载原生页 / RN 页 / H5 游戏，并提供 IM、AI、动态化、热更、监控等基础设施 |
+| **[StudyDemoRN](https://github.com/crunkzhang/StudyDemoRN)** | RN 页面提供方 | RN 0.84 新架构（Fabric + TurboModule）+ TS，19 个二级页面以「页面」身份嵌入原生壳，JS bundle 走 OSS 热更 |
+| **[StudyDemoWebGames](https://github.com/crunkzhang/StudyDemoWebGames)** | H5 小游戏 | 11 款纯手写 H5 小游戏，打包 zip 走 OSS 热更，被本仓库的 `GameModule` 动态加载、即点即玩 |
+
+> 对应到本仓库：RN 页由 [`WeChatRN`](#️-wechatrn--rn-新架构混合--一套可上线的-bundle-热更新) 承载，
+> H5 游戏由 [`GameModule`](#-gamemodule--oss-动态加载的小游戏平台--海龟汤-ai-游戏) 动态下发。
+
+---
+
 ## ✨ 核心亮点
 
 | 能力 | 模块 | 说明 |
@@ -21,6 +37,31 @@
 | 🚦 启动任务编排 | `WeChatSwift/Launch` | DAG 启动调度：依赖拓扑 + 四种触发时机 + 超时 / 失败策略 + 环检测；`sysctl` + RunLoop 首帧度量 |
 | 🌐 网络基础设施 | `DDNetwork` | `URLSession + async/await` 轻量网络库，Endpoint 描述、拦截器、认证、重试、日志 |
 | 🧭 路由 / 解耦 | `NavigateKit` · `WeChatRouter` | `wechat://` URL 路由，模块间零直接依赖 |
+
+---
+
+## 📱 界面预览
+
+**四个主 Tab**（左上角红/绿浮层是内置的 [`CatonMonitorKit`](#-catonmonitorkit--卡顿--性能监控可独立复用的-submodule) 实时 FPS / 卡顿计数）：
+
+<table>
+  <tr>
+    <td align="center"><img src="screenshots/tab_session.png" width="200"><br><sub><b>微信</b>　会话列表 · 原生</sub></td>
+    <td align="center"><img src="screenshots/tab_address.png" width="200"><br><sub><b>通讯录</b>　拼音分组 + 字母索引</sub></td>
+    <td align="center"><img src="screenshots/tab_discover.png" width="200"><br><sub><b>发现</b>　8 个功能入口</sub></td>
+    <td align="center"><img src="screenshots/tab_me.png" width="200"><br><sub><b>我</b>　整页 DSL 动态化</sub></td>
+  </tr>
+</table>
+
+**三种渲染形态同框**——原生壳里跑着 DSL 卡片、RN 页面、H5 游戏：
+
+<table>
+  <tr>
+    <td align="center"><img src="screenshots/chatdetail.png" width="240"><br><sub><b>结构化消息卡片</b><br>聊天气泡内由 <code>DSLKit</code> 渲染（付款 / 订单 / 图文卡片）</sub></td>
+    <td align="center"><img src="screenshots/feeds.png" width="240"><br><sub><b>朋友圈</b><br><code>WeChatRN</code> 承载的 RN 页面</sub></td>
+    <td align="center"><img src="screenshots/games.png" width="240"><br><sub><b>游戏中心</b><br><code>GameModule</code> 从 OSS 动态加载的 H5 游戏</sub></td>
+  </tr>
+</table>
 
 ---
 

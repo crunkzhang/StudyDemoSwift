@@ -3,6 +3,7 @@ import Foundation
 public enum AIProviderKind {
     case claudeDirect(apiKey: String)               // https://api.anthropic.com
     case claudeProxy(baseURL: URL)                  // 本地代理蹭 Max,无需 key
+    case deepseek(apiKey: String)                   // https://api.deepseek.com,OpenAI 兼容
     case mock(AIProvider)
 }
 
@@ -18,6 +19,8 @@ public enum AIConfig {
                                       apiKey: key, model: defaultModel)
         case .claudeProxy(let baseURL):
             provider = ClaudeProvider(baseURL: baseURL, apiKey: nil, model: defaultModel)
+        case .deepseek(let key):
+            provider = DeepSeekProvider(apiKey: key)
         case .mock(let p):
             provider = p
         }

@@ -72,3 +72,32 @@ final class ClaudeProviderTests: XCTestCase {
         XCTAssertEqual(resp.text, "是。接近真相了")
     }
 }
+
+final class DeepSeekProviderTests: XCTestCase {
+    let provider = DeepSeekProvider(apiKey: "sk-test")
+
+    func test_makeRequest_openAIShape() throws {
+        let req = AIRequest(system: "你是裁判",
+                            messages: [AIMessage(role: .user, content: "他死了吗?")],
+                            maxTokens: 128, temperature: 0.2)
+        let urlReq = try provider.makeURLRequest(req)
+        XCTAssertEqual(urlReq.url?.absoluteString, "https://api.deepseek.com/chat/completions")
+        XCTAssertEqual(urlReq.value(forHTTPHeaderField: "Authorization"), "Bearer sk-test")
+        let body = try JSONSerialization.jsonObject(with: urlReq.httpBody ?? Data()) as! [String: Any]
+        XCTAssertEqual(body["model"] as? String, "deepseek-chat")
+        let msgs = body["messages"] as! [[String: Any]]
+        XCTAssertEqual(msgs.first?["role"] as? String, "system")     // system 进 messages
+        XCTAssertEqual(msgs.first?["content"] as? String, "你是裁判")
+        XCTAssertEqual(msgs.last?["content"] as? String, "他死了吗?")
+        let rf = body["response_format"] as? [String: Any]
+        XCTAssertEqual(rf?["type"] as? String, "json_object")
+    }
+
+    func test_parse_choicesContent() throws {
+        let json = """
+        {"choices":[{"message":{"role":"assistant","content":"{\\"verdict\\":\\"yes\\"}"}}]}
+        """.data(using: .utf8)!
+        let resp = try provider.parse(json)
+        XCTAssertEqual(resp.text, #"{"verdict":"yes"}"#)
+    }
+}

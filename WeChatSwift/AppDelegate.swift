@@ -32,13 +32,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             remoteURL: "https://cz-rn-bundle.oss-cn-hangzhou.aliyuncs.com/games/manifest.json"
         )
 
-        // AI 能力(海龟汤等)provider 装配
-        // DEBUG:本地代理蹭 Max(localhost:8787);RELEASE:直连 Anthropic,key 走 Keychain
-        #if DEBUG
-        AIConfig.install(.claudeProxy(baseURL: URL(string: "http://localhost:8787")!))
-        #else
-        AIConfig.install(.claudeDirect(apiKey: KeychainAIKey.load() ?? ""))
-        #endif
+        // AI 能力(海龟汤等)provider 装配:DeepSeek 云端直连,key 走 Keychain
+        // 首次注入 key:临时加一行 KeychainAIKey.save("sk-xxx"),跑一次后删除
+        AIConfig.install(.deepseek(apiKey: KeychainAIKey.load() ?? ""))
 
         // 路由注册（syncAtStart）+ RN Bundle 热更新（afterFirstFrame）已移入调度器
         LaunchScheduler.shared.registerAll()

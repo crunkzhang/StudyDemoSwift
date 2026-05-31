@@ -18,6 +18,7 @@
 | 🧩 动态化页面引擎（SDUI） | `DSLKit` | JSON 描述页面 → 原生渲染 → OSS 热更，免发版改页面；支持组件注册、灰度、回滚、版本校验、可观测 |
 | 💬 自研 IM SDK | `WCIMSDK` | 基于 WCDB 的本地存储、seqId 增量同步、推送、分会话上传、DB 变更流 |
 | 📉 性能 / 卡顿监控 | `CatonMonitorKit` | FPS / RunLoop / Watchdog 多探测器、堆栈抓取与符号化、页面追踪、磁盘存储、调试浮层 |
+| 🚦 启动任务编排 | `WeChatSwift/Launch` | DAG 启动调度：依赖拓扑 + 四种触发时机 + 超时 / 失败策略 + 环检测；`sysctl` + RunLoop 首帧度量 |
 | 🌐 网络基础设施 | `DDNetwork` | `URLSession + async/await` 轻量网络库，Endpoint 描述、拦截器、认证、重试、日志 |
 | 🧭 路由 / 解耦 | `NavigateKit` · `WeChatRouter` | `wechat://` URL 路由，模块间零直接依赖 |
 
@@ -270,6 +271,26 @@ Action 分发带 **scheme 白名单**，下发的跳转只能走允许的 `wecha
 - **多探测器并行**：`FPSDetector`（掉帧）/ `RunLoopDetector`（RunLoop 超时）/ `WatchdogDetector`（主线程假死）。
 - 卡顿现场**抓主线程堆栈并符号化**（`StackCapture`）、页面停留追踪（`PageTracker`）。
 - 磁盘存储 + 可配置上报策略；内置**调试浮层**（`CatonOverlayWindow`）实时看 FPS / 卡顿事件。
+
+---
+
+### 🚦 启动任务编排 —— DAG 启动调度 + 首帧度量（`WeChatSwift/Launch`）
+
+把「一堆 SDK 挤在 `didFinishLaunching` 里顺序 setup」重构成**有向无环图调度**：每个启动项声明
+依赖、触发时机、超时与失败策略，调度器按拓扑顺序并发执行，把非关键项挪出启动主路径。
+
+- **四种触发时机**：`syncAtStart`（阻塞首帧前必须完成，如崩溃采集 / 路由注册）、
+  `asyncAtStart`（启动即并发、不阻塞返回）、`afterFirstFrame`（首帧后再做，如 RN 热更检查 / 广告 / AR）、
+  `onEvent`（进到某页才初始化，如地图 / 支付）——按需把工作量推后，缩短可交互时间。
+- **依赖驱动**：反向邻接表 + 入度递减，上游 `done` 才放行下游；`fire(event)` 时递归激活整条依赖链。
+- **健壮性**：启动前 DFS **环检测**（成环直接暴露而非线上死锁）；每个任务独立**超时**监控；
+  失败策略 `strict`（级联跳过下游）/ `tolerant`（下游照跑、自行兜底）；`syncGroup` 只等
+  `syncAtStart` 那批且失败也 `leave`，避免死锁。
+- **首帧度量（`LaunchMetrics`）**：用 `sysctl` 取进程**真实启动时刻**，再用 `CFRunLoopObserver`
+  （`beforeWaiting` + 最低优先级）捕捉主线程首次空闲 = 首帧，串起
+  `processStart → didFinishLaunching → firstFrame` 全链路耗时，并给每个 SDK 打 start/end 埋点出报告。
+
+---
 
 ### 🌐 DDNetwork —— async/await 轻量网络库（零业务依赖）
 

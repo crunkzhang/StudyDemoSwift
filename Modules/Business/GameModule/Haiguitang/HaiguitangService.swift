@@ -33,6 +33,44 @@ public actor HaiguitangService {
         return StartResult(puzzleId: id, title: title, surface: surface)
     }
 
+    // MARK: - 流式出题(两段式:汤底非流式 + 汤面流式)
+
+    func startPuzzleStream(difficulty: String, theme: String?, avoid: [String],
+                           onDelta: @escaping (String) -> Void) async throws -> StartResult {
+        // ① 生成汤底 + 标题(非流式,汤底留原生)
+        let truthReq = AIRequest(
+            system: HaiguitangPrompts.truthSystem,
+            messages: [AIMessage(role: .user, content: HaiguitangPrompts.truthUser(difficulty: difficulty, theme: theme, avoid: avoid))],
+            maxTokens: 400, temperature: 0.85
+        )
+        let tResp = try await client.complete(truthReq)
+        guard let obj = Self.extractJSON(tResp.text),
+              let title = obj["title"] as? String,
+              let solution = obj["solution"] as? String else {
+            throw AIError.decoding
+        }
+
+        // ② 流式生成汤面(纯文本,逐段回调)
+        let surfaceReq = AIRequest(
+            system: HaiguitangPrompts.surfaceStreamSystem,
+            messages: [AIMessage(role: .user, content: HaiguitangPrompts.surfaceStreamUser(solution: solution))],
+            maxTokens: 300, temperature: 0.9
+        )
+        var surface = ""
+        for try await chunk in client.completeStream(surfaceReq) {
+            surface += chunk
+            onDelta(chunk)
+        }
+        surface = surface.trimmingCharacters(in: .whitespacesAndNewlines)
+        if surface.isEmpty { throw AIError.decoding }
+
+        let id = UUID().uuidString
+        sessions[id] = PuzzleSession(puzzleId: id, title: title, surface: surface,
+                                     solution: solution, history: [], solved: false,
+                                     difficulty: difficulty, theme: theme)
+        return StartResult(puzzleId: id, title: title, surface: surface)
+    }
+
     // MARK: - 裁判
 
     func ask(puzzleId: String, question: String) async throws -> AskResult {

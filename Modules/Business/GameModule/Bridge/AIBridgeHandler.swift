@@ -1,11 +1,30 @@
 import Foundation
 
-public final class AIBridgeHandler: GameBridgeHandler {
+public final class AIBridgeHandler: GameBridgeHandler, GameBridgeStreamHandler {
     public let namespace = "ai"
     private let service: HaiguitangService
 
     public init(service: HaiguitangService = HaiguitangService()) {
         self.service = service
+    }
+
+    public func handleStream(method: String, params: [String: Any],
+                             emit: @escaping (String) -> Void) async -> BridgeResult {
+        switch method {
+        case "ai.startPuzzleStream":
+            do {
+                let r = try await service.startPuzzleStream(
+                    difficulty: params["difficulty"] as? String ?? "normal",
+                    theme: params["theme"] as? String,
+                    avoid: params["avoid"] as? [String] ?? [],
+                    onDelta: emit)
+                return .success(["puzzleId": r.puzzleId, "title": r.title, "surface": r.surface])
+            } catch {
+                return .failure(code: "AI_ERROR", message: "\(error)")
+            }
+        default:
+            return await handle(method: method, params: params)
+        }
     }
 
     public func handle(method: String, params: [String: Any]) async -> BridgeResult {

@@ -33,6 +33,31 @@ enum HaiguitangPrompts {
         return s
     }
 
+    // ── 流式出题:两段式(先生成汤底,再流式生成汤面)──
+
+    static let truthSystem = """
+    你是「海龟汤」出题人。请构思一道逻辑自洽、有唯一核心真相、可通过是非提问还原的题目。
+    只输出 JSON,不要多余文字:{"title":"≤10字标题","solution":"完整真相,能解释一切疑点"}
+    """
+
+    static func truthUser(difficulty: String, theme: String?, avoid: [String]) -> String {
+        var s = difficultyGuide(difficulty)
+        if let t = theme, !t.isEmpty { s += "\n题目风格:【\(t)】,真相要贴合该风格。" }
+        if !avoid.isEmpty { s += "\n请避免与这些已出过的题重复:\(avoid.joined(separator: "、"))。" }
+        s += "\n请构思一个全新的真相。"
+        return s
+    }
+
+    static let surfaceStreamSystem = """
+    你是「海龟汤」出题人。下面给你一道题的【真相】。请据此写出对应的【汤面】:
+    2-4 句、只描述表面的诡异现象、留下悬念、绝对不能剧透真相或任何关键因果。悬疑笔触。
+    直接输出汤面文本,不要 JSON、不要任何前后缀或解释。
+    """
+
+    static func surfaceStreamUser(solution: String) -> String {
+        "【真相(仅你可见,严禁泄露)】\n\(solution)\n\n请写出汤面。"
+    }
+
     static let judgeSystem = """
     你是「海龟汤」游戏的裁判。我会给你【汤面】【汤底(真相,仅你可见,严禁泄露)】和玩家的提问历史。
     针对玩家**本次是非提问**,只依据汤底判定,输出 JSON,不要多余文字:

@@ -19,4 +19,9 @@ public final class AIClient {
         lock.lock(); let p = provider; lock.unlock()
         return try await p.complete(request)
     }
+
+    public func completeStream(_ request: AIRequest) -> AsyncThrowingStream<String, Error> {
+        lock.lock(); let p = provider; lock.unlock()
+        return p.completeStream(request)
+    }
 }

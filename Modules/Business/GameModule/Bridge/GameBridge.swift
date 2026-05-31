@@ -33,11 +33,31 @@ public final class GameBridge: NSObject, WKScriptMessageHandler {
               let callId = body["callId"] as? String,
               let method = body["method"] as? String else { return }
         let params = body["params"] as? [String: Any] ?? [:]
+        let stream = body["stream"] as? Bool ?? false
+
+        let ns = method.split(separator: ".").first.map(String.init) ?? ""
+
+        if stream, let handler = handlers[ns] as? GameBridgeStreamHandler {
+            Task {
+                let result = await handler.handleStream(method: method, params: params) { [weak self] delta in
+                    Task { @MainActor in self?.emit(callId: callId, delta: delta) }
+                }
+                await MainActor.run { self.callback(callId: callId, result: result) }
+            }
+            return
+        }
 
         Task {
             let result = await resolve(method: method, params: params)
             await MainActor.run { self.callback(callId: callId, result: result) }
         }
+    }
+
+    @MainActor
+    private func emit(callId: String, delta: String) {
+        guard let data = try? JSONSerialization.data(withJSONObject: ["delta": delta]),
+              let json = String(data: data, encoding: .utf8) else { return }
+        webView?.evaluateJavaScript("window.WCGameBridge && window.WCGameBridge._emit('\(callId)', \(json));", completionHandler: nil)
     }
 
     private func callback(callId: String, result: BridgeResult) {

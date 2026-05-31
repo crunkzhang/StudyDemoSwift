@@ -2,9 +2,9 @@ import Foundation
 
 /// 海龟汤等业务使用的 AI 厂商(均为 OpenAI 兼容)。
 public enum AIVendor: String, CaseIterable {
-    case zhipu
     case deepseek
     case qwen
+    case zhipu
 
     public var displayName: String {
         switch self {
@@ -41,9 +41,9 @@ public enum AIProviderKind {
 public enum AIConfig {
     private static let selectedKey = "ai.selectedVendor"
 
-    /// 当前选择的厂商(持久化在 UserDefaults,默认 智谱 GLM)
+    /// 当前选择的厂商(持久化在 UserDefaults,默认 DeepSeek)
     public static var current: AIVendor {
-        get { AIVendor(rawValue: UserDefaults.standard.string(forKey: selectedKey) ?? "") ?? .zhipu }
+        get { AIVendor(rawValue: UserDefaults.standard.string(forKey: selectedKey) ?? "") ?? .deepseek }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: selectedKey) }
     }
 

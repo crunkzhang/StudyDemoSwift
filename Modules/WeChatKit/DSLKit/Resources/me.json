@@ -1,0 +1,39 @@
+{
+  "page": "me",
+  "version": "1.0",
+  "minClient": 1,
+  "background": "#F2F3F5",
+  "sections": [
+    {
+      "type": "profileHeader",
+      "name": "用户",
+      "wxid": "微信号 wxid_demo",
+      "status": "状态 · 今天也在认真生活",
+      "avatarText": "我",
+      "avatarColor": "#07C160",
+      "action": "wechat://rn?page=profile"
+    },
+    {
+      "type": "group",
+      "children": [
+        { "type": "cell", "icon": "creditcard.fill", "iconColor": "#576B95", "title": "服务", "action": "wechat://rn?page=services" },
+        { "type": "cell", "icon": "sparkles", "iconColor": "#FF9500", "title": "活动中心", "action": "wechat://page?id=activity" }
+      ]
+    },
+    {
+      "type": "group",
+      "children": [
+        { "type": "cell", "icon": "star.fill", "iconColor": "#FA9D3B", "title": "收藏", "action": "wechat://rn?page=favorites" },
+        { "type": "cell", "icon": "photo.on.rectangle.fill", "iconColor": "#07C160", "title": "朋友圈", "action": "wechat://rn?page=moments" },
+        { "type": "cell", "icon": "menucard.fill", "iconColor": "#576B95", "title": "卡包", "action": "wechat://rn?page=cards" },
+        { "type": "cell", "icon": "face.smiling.fill", "iconColor": "#FA9D3B", "title": "表情", "action": "wechat://rn?page=stickers" }
+      ]
+    },
+    {
+      "type": "group",
+      "children": [
+        { "type": "cell", "icon": "gearshape.fill", "iconColor": "#576B95", "title": "设置", "action": "wechat://rn?page=settings" }
+      ]
+    }
+  ]
+}

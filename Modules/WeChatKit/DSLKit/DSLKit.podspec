@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
-  s.name             = 'MeModule'
+  s.name             = 'DSLKit'
   s.version          = '1.0.0'
-  s.summary          = '我的页业务模块'
-  s.description      = '个人资料、设置。'
+  s.summary          = '动态化页面引擎(SDUI):JSON 描述 → 原生渲染 → OSS 热更'
+  s.description      = 'DSL/JSON 驱动的页面渲染引擎,支持组件注册、向前兼容、灰度、回滚。首发用于「我的」页。'
   s.homepage         = 'https://github.com/nicedayzhu/WeChatSwift'
   s.license          = { :type => 'MIT' }
   s.author           = { 'nicedayzhu' => 'nicedayzhu@example.com' }
@@ -12,13 +12,19 @@ Pod::Spec.new do |s|
   s.swift_version = '5.0'
 
   s.source_files = '**/*.swift'
+  s.exclude_files = 'DSLKitTests/**/*'
+  s.resources = ['Resources/**/*']
 
   s.frameworks = 'UIKit', 'Foundation'
 
   s.dependency 'WeChatUI'
   s.dependency 'WeChatRouter'
-  s.dependency 'WeChatNetAPI'
+  s.dependency 'NavigateKit'
   s.dependency 'ExtensionKit'
   s.dependency 'SnapKit'
-  s.dependency 'DSLKit'
+
+  s.test_spec 'DSLKitTests' do |ts|
+    ts.source_files = 'DSLKitTests/**/*.swift'
+    ts.frameworks = 'XCTest'
+  end
 end

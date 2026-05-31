@@ -5,6 +5,7 @@ import WCIMSDK
 import ChatModule
 import GameModule
 import AIKit
+import DSLKit
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -32,8 +33,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             remoteURL: "https://cz-rn-bundle.oss-cn-hangzhou.aliyuncs.com/games/manifest.json"
         )
 
+        // 动态化页面(SDUI):路由注册 + 后台拉取 page schema(「我的」页 / 活动页等)
+        DSLKit.registerRoutes()
+        PageSchemaManager.shared.start(
+            remoteURL: "https://cz-rn-bundle.oss-cn-hangzhou.aliyuncs.com/pages/manifest.json"
+        )
+
         // AI 能力(海龟汤等):多厂商 OpenAI 兼容,游戏内可切换;key 走 Keychain
-        // 首次注入各家 key:本地临时 KeychainAIKey.save("sk-xxx", vendor: "deepseek") 跑一次,勿提交
+        // ⚠️ 临时:首次把三家 key 写进 Keychain,跑一次后删除这三行(勿提交)
+        KeychainAIKey.save("sk-b35394db582c45be939e87aedeb0c494", vendor: "deepseek")
+        KeychainAIKey.save("sk-697d00cd8da64998902daa643ecaef24", vendor: "qwen")
+        KeychainAIKey.save("54b77dcf832e4ed9a37646357ee2e56f.e7j0089vMjJpIWW6", vendor: "zhipu")
         AIConfig.installSelected()
 
         // 路由注册（syncAtStart）+ RN Bundle 热更新（afterFirstFrame）已移入调度器

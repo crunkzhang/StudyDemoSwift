@@ -1,0 +1,42 @@
+{
+  "page": "activity",
+  "version": "1.0",
+  "minClient": 1,
+  "title": "活动中心",
+  "layout": "collection",
+  "background": "#F2F3F5",
+  "data": { "user": { "name": "微信用户" } },
+  "sections": [
+    {
+      "type": "banner",
+      "title": "{{user.name}},欢迎回来",
+      "subtitle": "限时活动 · 每日签到领好礼",
+      "gradient": ["#FF7E5F", "#FEB47B"],
+      "action": "wechat://rn?page=checkin"
+    },
+    { "type": "text", "title": "热门入口" },
+    {
+      "type": "grid",
+      "columns": 4,
+      "children": [
+        { "type": "gridItem", "icon": "gift.fill", "iconColor": "#FA5151", "title": "签到", "action": "wechat://rn?page=checkin" },
+        { "type": "gridItem", "icon": "ticket.fill", "iconColor": "#FF9500", "title": "卡券", "action": "wechat://rn?page=coupons" },
+        { "type": "gridItem", "icon": "flame.fill", "iconColor": "#FF3B30", "title": "热卖", "action": "wechat://rn?page=hot" },
+        { "type": "gridItem", "icon": "crown.fill", "iconColor": "#FFCC00", "title": "会员", "action": "wechat://rn?page=vip" },
+        { "type": "gridItem", "icon": "gamecontroller.fill", "iconColor": "#07C160", "title": "游戏", "action": "wechat://game/hall" },
+        { "type": "gridItem", "icon": "bag.fill", "iconColor": "#576B95", "title": "商城", "action": "wechat://rn?page=shop" },
+        { "type": "gridItem", "icon": "star.fill", "iconColor": "#FA9D3B", "title": "收藏", "action": "wechat://rn?page=favorites" },
+        { "type": "gridItem", "icon": "ellipsis", "iconColor": "#8A9099", "title": "更多", "action": "wechat://rn?page=more" }
+      ]
+    },
+    {
+      "type": "banner",
+      "title": "邀请好友 得 88 元",
+      "subtitle": "每邀一位再叠加奖励",
+      "gradient": ["#36D1DC", "#5B86E5"],
+      "action": "wechat://rn?page=invite"
+    },
+    { "type": "text", "title": "玩法说明", "subtitle": "本页完全由 DSL 动态下发,改 JSON 即可热更,无需发版。" },
+    { "type": "futureBlock", "title": "未来组件(老客户端应自动跳过)" }
+  ]
+}

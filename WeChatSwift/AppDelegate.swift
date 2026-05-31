@@ -40,10 +40,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         )
 
         // AI 能力(海龟汤等):多厂商 OpenAI 兼容,游戏内可切换;key 走 Keychain
-        // ⚠️ 临时:首次把三家 key 写进 Keychain,跑一次后删除这三行(勿提交)
-        KeychainAIKey.save("sk-b35394db582c45be939e87aedeb0c494", vendor: "deepseek")
-        KeychainAIKey.save("sk-697d00cd8da64998902daa643ecaef24", vendor: "qwen")
-        KeychainAIKey.save("54b77dcf832e4ed9a37646357ee2e56f.e7j0089vMjJpIWW6", vendor: "zhipu")
         AIConfig.installSelected()
 
         // 路由注册（syncAtStart）+ RN Bundle 热更新（afterFirstFrame）已移入调度器

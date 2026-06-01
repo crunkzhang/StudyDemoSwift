@@ -17,7 +17,7 @@
 |---|---|---|
 | **[StudyDemoSwift](https://github.com/crunkzhang/StudyDemoSwift)**（本仓库） | 原生 iOS 壳 / 宿主 | Swift + UIKit，承载原生页 / RN 页 / H5 游戏，并提供 IM、AI、动态化、热更、监控等基础设施 |
 | **[StudyDemoRN](https://github.com/crunkzhang/StudyDemoRN)** | RN 页面提供方 | RN 0.84 新架构（Fabric + TurboModule）+ TS，19 个二级页面以「页面」身份嵌入原生壳，JS bundle 走 OSS 热更 |
-| **[StudyDemoWebGames](https://github.com/crunkzhang/StudyDemoWebGames)** | H5 小游戏 | 11 款纯手写 H5 小游戏，打包 zip 走 OSS 热更，被本仓库的 `GameModule` 动态加载、即点即玩 |
+| **[StudyDemoWebGames](https://github.com/crunkzhang/StudyDemoWebGames)** | H5 小游戏 | 11 款AI完成 H5 小游戏，打包 zip 走 OSS 热更，被本仓库的 `GameModule` 动态加载、即点即玩 |
 
 > 对应到本仓库：RN 页由 [`WeChatRN`](#️-wechatrn--rn-新架构混合--一套可上线的-bundle-热更新) 承载，
 > H5 游戏由 [`GameModule`](#-gamemodule--oss-动态加载的小游戏平台--海龟汤-ai-游戏) 动态下发。

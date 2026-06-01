@@ -32,7 +32,7 @@
 | 🎮 小游戏平台 | `GameModule` | 游戏从 **OSS 动态下发**（manifest + sha256 + 灰度 + 回退），H5 经 JS Bridge 调端上 AI；首发「海龟汤」AI 出题/裁判推理游戏 |
 | 🤖 AI 能力接入 | `AIKit` | 统一 Provider 抽象，DeepSeek / 通义 / 智谱 **运行时一键切换**（OpenAI 兼容）+ Claude；SSE 流式、Keychain 存密钥 |
 | 🧩 动态化页面引擎（SDUI） | `DSLKit` | JSON 描述页面 → 原生渲染 → OSS 热更，免发版改页面；支持组件注册、灰度、回滚、版本校验、可观测 |
-| 💬 自研 IM SDK | `WCIMSDK` | 基于 WCDB 的本地存储、seqId 增量同步、推送、分会话上传、DB 变更流 |
+| 💬 自研 IM SDK | `WCIMSDK` | 基于 WCDB 的本地存储、seqId 增量同步、分会话上传、DB 变更流 |
 | 📉 性能 / 卡顿监控 | `CatonMonitorKit` | FPS / RunLoop / Watchdog 多探测器、堆栈抓取与符号化、页面追踪、磁盘存储、调试浮层 |
 | 🚦 启动任务编排 | `WeChatSwift/Launch` | DAG 启动调度：依赖拓扑 + 四种触发时机 + 超时 / 失败策略 + 环检测；`sysctl` + RunLoop 首帧度量 |
 | 🌐 网络基础设施 | `DDNetwork` | `URLSession + async/await` 轻量网络库，Endpoint 描述、拦截器、认证、重试、日志 |
